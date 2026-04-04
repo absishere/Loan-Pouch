@@ -19,6 +19,25 @@ from app.services.firebase_service import send_guardian_approval_request, send_r
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/loans", tags=["Loans"])
 
+@router.get("/", response_model=list[LoanResponse], summary="Get all active loans from the market")
+async def api_get_all_loans():
+    """Fetch all loans directly from the LoanPouchEscrow on Sepolia natively."""
+    from app.services.web3_service import get_all_loans
+    loans_data = get_all_loans()
+    
+    # Optional: we can attach risk predictions recursively here if performance permits. 
+    # For a marketplace dashboard we might skip the deep ML prediction on the summary list 
+    # and only do it per-loan, but let's apply a mock basic struct to satisfy Pydantic LoanResponse.
+    
+    results = []
+    for loan in loans_data:
+        results.append(LoanResponse(
+            **loan,
+            risk_label="Analyzing...", 
+            risk_probability=50.0
+        ))
+    return results
+
 
 @router.get("/{loan_id}", response_model=LoanResponse, summary="Get loan details from chain")
 async def api_get_loan(loan_id: int):

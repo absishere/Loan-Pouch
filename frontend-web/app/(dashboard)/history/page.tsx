@@ -1,13 +1,59 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { formatCurrency, formatDate, getStatusColor } from "@/lib/utils";
-import { Filter, Download, ExternalLink } from "lucide-react";
+import { Filter, Download, ExternalLink, Loader2 } from "lucide-react";
 
 export default function HistoryPage() {
   const [filter, setFilter] = useState("all");
+  const [transactions, setTransactions] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const transactions: any[] = []; // Removed mock data hookup
+  // Fallback demo wallet
+  const currentUserWallet = process.env.NEXT_PUBLIC_WALLET_ADDRESS || "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
+
+  useEffect(() => {
+    async function loadRealLoans() {
+      try {
+        setLoading(true);
+        // Explicitly routing to the configured FastAPI port we spun up in Terminal 1
+        const res = await fetch("http://127.0.0.1:8000/loans/");
+        if (!res.ok) throw new Error("API Offline");
+        const data = await res.json();
+        
+        const myTransactions: any[] = [];
+        data.forEach((loan: any) => {
+           // Mapping raw Sepolia Blockchain Loan Pydantic JSON to UI elements
+           if (loan.borrower.toLowerCase() === currentUserWallet.toLowerCase()) {
+              myTransactions.push({
+                 id: loan.id,
+                 type: "borrowed",
+                 amount: loan.target_amount / 1e18,
+                 status: loan.state === 3 ? "Completed" : loan.state === 5 ? "Overdue" : "Active",
+                 party: "Marketplace Lenders",
+                 date: new Date(loan.funding_deadline * 1000).toISOString()
+              });
+           } else if (loan.guardians && loan.guardians.map((g: string) => g.toLowerCase()).includes(currentUserWallet.toLowerCase())) {
+              myTransactions.push({
+                 id: loan.id,
+                 type: "lent",
+                 amount: loan.gathered_amount / 1e18,
+                 status: "Active",
+                 party: `Borrower: ${loan.borrower.substring(0,8)}...`,
+                 date: new Date(loan.funding_deadline * 1000).toISOString()
+              });
+           }
+        });
+        
+        setTransactions(myTransactions);
+      } catch (e) {
+        console.error("Fetch failed:", e);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadRealLoans();
+  }, []);
 
   const filteredTransactions = transactions.filter((tx) => {
     if (filter === "all") return true;

@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import ClayCard from '../components/ClayCard';
 import ClayButton from '../components/ClayButton';
+
+import { api, LoanResponse, LOAN_STATE_LABELS } from '../services/api';
 
 interface Transaction {
   id: string;
@@ -13,45 +15,58 @@ interface Transaction {
   counterparty: string;
 }
 
-const mockTransactions: Transaction[] = [
-  {
-    id: '1',
-    type: 'borrow',
-    amount: 5000,
-    status: 'completed',
-    date: '2024-03-15',
-    counterparty: 'Priya Sharma'
-  },
-  {
-    id: '2',
-    type: 'lend',
-    amount: 3000,
-    status: 'active',
-    date: '2024-03-20',
-    counterparty: 'Rahul Kumar'
-  },
-  {
-    id: '3',
-    type: 'borrow',
-    amount: 8000,
-    status: 'completed',
-    date: '2024-03-10',
-    counterparty: 'Anita Patel'
-  },
-  {
-    id: '4',
-    type: 'lend',
-    amount: 2500,
-    status: 'overdue',
-    date: '2024-02-28',
-    counterparty: 'Vikram Singh'
-  },
-];
-
 export default function HistoryScreen() {
   const [filter, setFilter] = useState<'all' | 'borrow' | 'lend'>('all');
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const filteredTransactions = mockTransactions.filter((tx) => {
+  // In the absence of a live Web3 Provider, we use the fallback test wallet for demo
+  const currentUserWallet = process.env.EXPO_PUBLIC_WALLET_ADDRESS || "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
+
+  useEffect(() => {
+    async function loadHistory() {
+      try {
+        setIsLoading(true);
+        const liveLoans = await api.listLoans();
+        
+        const userHistory: Transaction[] = [];
+        
+        liveLoans.forEach((loan) => {
+          // If the current user is the borrower
+          if (loan.borrower.toLowerCase() === currentUserWallet.toLowerCase()) {
+            userHistory.push({
+              id: loan.id.toString() + '-b',
+              type: 'borrow',
+              amount: loan.target_amount / 1e18, // Convert from Wei for demo
+              status: loan.state === 3 ? 'completed' : loan.state === 5 ? 'overdue' : 'active',
+              date: new Date(loan.funding_deadline * 1000).toISOString(),
+              counterparty: 'Decentralized Lenders' // For borrow, we owe the pool
+            });
+          } 
+          // If the user participated (for the hackathon demo we check if they are in guardians or just map others as lending ops)
+          else if (loan.guardians.map(g => g.toLowerCase()).includes(currentUserWallet.toLowerCase())) {
+            userHistory.push({
+               id: loan.id.toString() + '-l',
+               type: 'lend',
+               amount: loan.gathered_amount / 1e18, 
+               status: 'active',
+               date: new Date(loan.funding_deadline * 1000).toISOString(),
+               counterparty: `Borrower ${loan.borrower.substring(0,6)}`
+            });
+          }
+        });
+        
+        setTransactions(userHistory);
+      } catch (err) {
+        console.error("Failed to fetch history:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    loadHistory();
+  }, []);
+
+  const filteredTransactions = transactions.filter((tx) => {
     if (filter === 'all') return true;
     return tx.type === filter;
   });

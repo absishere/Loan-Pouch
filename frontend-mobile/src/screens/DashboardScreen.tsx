@@ -36,8 +36,10 @@ export default function DashboardScreen() {
         {/* Stats Grid */}
         <View style={styles.statsGrid}>
           <ClayCard style={styles.statCard}>
-            <Text style={styles.statLabel}>Demo Balance</Text>
-            <Text style={styles.statValue}>₹50,000</Text>
+            <Text style={styles.statLabel}>Market Total Value</Text>
+            <Text style={styles.statValue}>
+              {loans.reduce((acc, curr) => acc + (curr.target_amount / 1e18), 0).toFixed(1)} ETH
+            </Text>
           </ClayCard>
           
           <ClayCard style={styles.statCard}>
@@ -46,13 +48,17 @@ export default function DashboardScreen() {
           </ClayCard>
           
           <ClayCard style={styles.statCard}>
-            <Text style={styles.statLabel}>Interest Rate</Text>
-            <Text style={styles.statValue}>5.0%</Text>
+            <Text style={styles.statLabel}>Active Lenders</Text>
+            <Text style={styles.statValue}>
+               {new Set(loans.map(l => l.borrower)).size + new Set(loans.flatMap(l => l.guardians)).size}
+            </Text>
           </ClayCard>
           
           <ClayCard style={styles.statCard}>
-            <Text style={styles.statLabel}>Transactions</Text>
-            <Text style={styles.statValue}>0</Text>
+            <Text style={styles.statLabel}>Fully Funded</Text>
+            <Text style={styles.statValue}>
+                {loans.filter(l => l.state >= 2).length}
+            </Text>
           </ClayCard>
         </View>
 

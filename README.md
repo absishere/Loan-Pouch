@@ -32,7 +32,7 @@ Using zero-knowledge KYC, on-chain trust scoring, and Algorithmic Guardian Weigh
 
 ```
 Loan-Pouch/
-├── backend/                 # FastAPI Python backend
+├── backend/                 # FastAPI Python Server & EVM Indexer
 │   └── app/
 │       ├── api/             # REST routes (loans, kyc, guardians)
 │       ├── services/        # web3_service, kyc_service
@@ -43,9 +43,8 @@ Loan-Pouch/
 │   │   └── B_INR.sol             # B-INR stablecoin token
 │   └── scripts/
 │       └── clean_deploy.js
-├── frontend-web/            # Anchita's Next.js 14 web dashboard
-├── frontend-mobile/         # Expo React Native mobile app
-└── frontend-kyc/            # Rushikesh's Vite KYC face-match module
+├── frontend-web/            # Next.js 14 Dashboard + TensorFlow Face-API KYC Gate
+└── frontend-mobile/         # Expo React Native App (WebView Bridges)
 ```
 
 ---
@@ -139,7 +138,7 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 ---
 
-### 5. 🌐 Web Frontend (Next.js)
+### 5. 🌐 Web Dashboard + E-KYC Authentication (Next.js)
 
 ```bash
 cd frontend-web
@@ -156,6 +155,7 @@ npm run dev
 ```
 
 ✅ Web dashboard available at: **http://localhost:3000**
+✅ Integrated ML Biometric Lock: **http://localhost:3000/login**
 
 ---
 
@@ -167,34 +167,17 @@ cd frontend-mobile
 # Install dependencies
 npm install
 
+# Setup your local IP address format in .env
+# EXPO_PUBLIC_API_URL=http://192.168.x.x:8000
+
 # Start the Expo dev server
 npx expo start
 ```
 
 - Press `a` to open on Android emulator
-- Press `i` to open on iOS simulator
 - Scan the QR code with [Expo Go](https://expo.dev/client) on your physical device
 
-> **Android emulator note:** The app uses `10.0.2.2:8000` to reach the host machine's backend. iOS simulator uses `127.0.0.1:8000`.
-
----
-
-### 7. 🧠 KYC / Face-Match Module (Vite)
-
-```bash
-cd frontend-kyc/frontend
-
-# Install dependencies
-npm install
-
-# Download ML face detection models
-python ../download_models.py
-
-# Start the KYC module
-npm run dev
-```
-
-✅ KYC module available at: **http://localhost:5173**
+> **Note:** The Mobile app natively embeds the `frontend-web` AI camera tracking via React Native WebView for flawless cross-device KYC without heavy C++ bridging!
 
 ---
 

@@ -110,11 +110,9 @@ export default function LandingScreen() {
             >
               {/* Character Image */}
               <View style={styles.characterFrame}>
-                <Image 
-                  source={require('../../assets/images/character_2.jpg')} // or .png
-                  style={styles.characterImage}
-                  resizeMode="cover"
-                />
+                <View style={[styles.characterImage, { backgroundColor: '#f3f4f6', alignItems: 'center', justifyContent: 'center' }]}>
+                  <Text style={styles.characterPlaceholder}>👤</Text>
+                </View>
               </View>
               
               {/* Floating Dots */}

@@ -92,6 +92,24 @@ def get_loan(loan_id: int) -> dict:
         return {}
 
 
+def get_all_loans() -> list[dict]:
+    """Fetch all active loans from the smart contract by iterating up to nextLoanId."""
+    try:
+        contract = get_escrow_contract()
+        # The counter variable we checked in contracts/LoanPouchEscrow.sol is nextLoanId
+        next_id = contract.functions.nextLoanId().call()
+        
+        loans = []
+        for i in range(1, next_id):
+            loan = get_loan(i)
+            if loan and loan.get("target_amount", 0) > 0:
+                loans.append(loan)
+        return loans
+    except Exception as e:
+        logger.error(f"get_all_loans error: {e}")
+        return []
+
+
 def is_wallet_locked(wallet_address: str) -> bool:
     """Check whether a wallet is SMS-locked on-chain."""
     try:
