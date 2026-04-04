@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import ClayCard from '../components/ClayCard';
 import ClayButton from '../components/ClayButton';
 import { api } from '../services/api';
+import * as LocalAuthentication from 'expo-local-authentication';
 
 export default function BorrowScreen() {
   const [amount, setAmount] = useState('5000');
@@ -56,7 +57,28 @@ export default function BorrowScreen() {
       Alert.alert('Invalid Amount', 'Please enter a valid loan amount.');
       return;
     }
+
     try {
+      // 1. TEE Biometric Gate
+      const hasHardware = await LocalAuthentication.hasHardwareAsync();
+      const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+
+      if (!hasHardware || !isEnrolled) {
+        Alert.alert("Security Error", "Biometric authentication (FaceID/Fingerprint) is required to sign transactions.");
+        return;
+      }
+
+      // 2. Prompt Secure Enclave
+      const authResult = await LocalAuthentication.authenticateAsync({
+        promptMessage: 'Authenticate to sign loan request on-chain',
+        fallbackLabel: 'Use Device PIN',
+      });
+
+      if (!authResult.success) {
+        Alert.alert("Authentication Failed", "You cannot proceed without biometric approval.");
+        return;
+      }
+
       setLoading(true);
       const res = await api.requestLoan({
         borrower_address: borrowerAddress,

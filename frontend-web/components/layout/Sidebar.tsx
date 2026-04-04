@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, TrendingUp, TrendingDown, BarChart3, History, User, LogOut, X } from "lucide-react";
+import { Home, TrendingUp, TrendingDown, BarChart3, History, User, LogOut, X, ShieldCheck } from "lucide-react";
 import { useState } from "react";
 
 const navItems = [
   { icon: Home, label: "Dashboard", href: "/dashboard" },
   { icon: TrendingUp, label: "Borrow", href: "/borrow" },
   { icon: TrendingDown, label: "Lend", href: "/lend" },
+  { icon: ShieldCheck, label: "Guardian", href: "/guardian" },
   { icon: BarChart3, label: "Analytics", href: "/analytics" },
   { icon: History, label: "History", href: "/history" },
   { icon: User, label: "Profile", href: "/profile" },

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { formatCurrency, calculateInterestRate } from "@/lib/utils";
 import { api } from "@/lib/api";
 import { ArrowLeft } from "lucide-react";
+import { ethers } from "ethers";
 import Link from "next/link";
 
 const PURPOSES = ["Education", "Medical", "Emergency", "Personal"];
@@ -43,22 +44,58 @@ export default function BorrowPage() {
   const handleSubmit = async () => {
     setError(null);
     setTxHash(null);
+    
+    if (!(window as any).ethereum) {
+      setError("MetaMask/Web3 wallet is required.");
+      return;
+    }
+
     if (!borrowerAddress || guardians.some((g) => !g)) {
       setError("Please fill in your wallet address and all 3 guardian addresses.");
       return;
     }
+
     try {
       setLoading(true);
-      const res = await api.requestLoan({
-        borrower_address: borrowerAddress,
-        amount: Math.floor(amount * 1e18),
-        interest_amount: Math.floor(interestAmount * 1e18),
-        guardians: guardians,
-        funding_deadline_days: duration,
-      });
-      setTxHash(res.tx_hash);
+      // Connect directly to the user's wallet (Decentralized execution!)
+      const provider = new ethers.BrowserProvider((window as any).ethereum);
+      const signer = await provider.getSigner();
+      
+      const escrowAddress = process.env.NEXT_PUBLIC_ESCROW_ADDRESS || "0x5F20ffB3BC50b37A4c7ed930a7D8e690d9f00a35";
+      const escrowAbi = [
+        "function requestLoan(uint256 _targetAmount, uint256 _targetInterest, address[3] memory _guardians, uint256 _fundingDurationSecs, uint256 _repaymentDurationSecs) external"
+      ];
+      
+      const contract = new ethers.Contract(escrowAddress, escrowAbi, signer);
+      
+      const durationSeconds = duration * 24 * 60 * 60; // Funding timeline
+      const repaymentSeconds = duration * 24 * 60 * 60; // Repayment timeline
+      
+      // Send transaction directly to the blockchain
+      const tx = await contract.requestLoan(
+        ethers.parseUnits(amount.toString(), 18), 
+        ethers.parseUnits(interestAmount.toString(), 18),
+        guardians,
+        durationSeconds,
+        repaymentSeconds
+      );
+      
+      setTxHash(tx.hash);
+      await tx.wait(); // Wait for confirmation
+      
+      // Tell backend to trigger gamified hooks or send Guardian SMS if API route available
+      // (This is purely a non-custodial webhook now)
+      try {
+        await fetch('http://127.0.0.1:8000/api/hooks/loan-requested', {
+          method: 'POST',
+          body: JSON.stringify({ guardians, tx_hash: tx.hash })
+        });
+      } catch (e) {
+        // Safe to ignore, the blockchain registered the state
+      }
+
     } catch (e: any) {
-      setError(e?.message ?? "Loan request failed. Check backend logs.");
+      setError(e?.message ?? "Transaction failed.");
     } finally {
       setLoading(false);
     }

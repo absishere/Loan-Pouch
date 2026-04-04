@@ -2,11 +2,42 @@
 
 import { useEffect, useState } from "react";
 import { formatCurrency, getTrustScoreTier, calculateInterestRate, formatDate } from "@/lib/utils";
-import { Bell, Activity, Globe, Scale, Users, ArrowUpRight } from "lucide-react";
+import { Bell, Activity, Globe, Scale, Users, ArrowUpRight, X } from "lucide-react";
+import { ethers } from "ethers";
 
 export default function DashboardPage() {
   const [loans, setLoans] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Fiat OnRamp State
+  const [showOnramp, setShowOnramp] = useState(false);
+  const [depositAmount, setDepositAmount] = useState<number>(5000);
+  const [minting, setMinting] = useState(false);
+
+  // Expose the mock Fiat pipeline via Ethers BrowserProvider
+  const handleMintBinr = async () => {
+    if (!(window as any).ethereum) return alert("Please install MetaMask!");
+    setMinting(true);
+    try {
+      const provider = new ethers.BrowserProvider((window as any).ethereum);
+      const signer = await provider.getSigner();
+      
+      const binrAddress = process.env.NEXT_PUBLIC_BINR_ADDRESS || "0x6e215881860d93a63Bf3CEb3EB2031F8c925c22e"; 
+      const binrAbi = ["function faucetMint(address to, uint256 amount) public"];
+      
+      const contract = new ethers.Contract(binrAddress, binrAbi, signer);
+      const tx = await contract.faucetMint(await signer.getAddress(), ethers.parseUnits(depositAmount.toString(), 18));
+      await tx.wait();
+      
+      alert(`Successfully minted ${depositAmount} LP-INR to your wallet!`);
+      setShowOnramp(false);
+    } catch (error) {
+      console.error(error);
+      alert("Minting failed. Ensure MetaMask is connected to Sepolia.");
+    } finally {
+      setMinting(false);
+    }
+  };
 
   useEffect(() => {
     const fetchDashboard = async () => {
@@ -28,7 +59,56 @@ export default function DashboardPage() {
   const activeLenders = new Set(loans.map(l => l.borrower)).size + new Set(loans.flatMap(l => l.guardians)).size;
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white relative">
+      {/* Fiat OnRamp Modal */}
+      {showOnramp && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl max-w-sm w-full p-6 shadow-2xl">
+             <div className="flex justify-between items-center mb-4">
+               <h3 className="font-bold text-lg">Fiat On-Ramp</h3>
+               <button onClick={() => setShowOnramp(false)} className="text-gray-500 hover:text-black">
+                 <X size={20} />
+               </button>
+             </div>
+             
+             <p className="text-sm text-gray-500 mb-6">Connect your bank account or test UPI to purchase B-INR stablecoins directly to your Web3 wallet.</p>
+             
+             <div className="mb-6">
+                <label className="block text-sm font-medium mb-2">Deposit Amount (₹)</label>
+                <input 
+                  type="number" 
+                  value={depositAmount}
+                  onChange={(e) => setDepositAmount(Number(e.target.value))}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+                />
+             </div>
+
+             {depositAmount < 100000 ? (
+                <div className="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-lg flex flex-col items-center">
+                   <div className="w-32 h-32 bg-gray-200 flex items-center justify-center rounded-lg mb-2">
+                      <span className="text-xs text-gray-400 font-mono">DUMMY UPI QR</span>
+                   </div>
+                   <p className="text-xs font-medium">Scan to pay via GPay / PhonePe</p>
+                </div>
+             ) : (
+                <div className="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                   <p className="text-xs font-bold text-gray-500 mb-1">RTGS / NEFT transfer detail</p>
+                   <p className="text-sm font-mono bg-white p-2 border rounded">Acc: 7789102930192</p>
+                   <p className="text-sm font-mono bg-white p-2 border rounded mt-1">IFSC: HDFC0001234</p>
+                </div>
+             )}
+
+             <button 
+               onClick={handleMintBinr}
+               disabled={minting}
+               className="w-full bg-black text-white py-3 rounded-lg font-medium hover:bg-gray-800 disabled:opacity-50"
+             >
+               {minting ? "Minting to Wallet..." : "I have made the payment"}
+             </button>
+          </div>
+        </div>
+      )}
+
       {/* Top Bar */}
       <div className="border-b border-gray-200 bg-white px-4 lg:px-8 py-4">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
@@ -37,7 +117,13 @@ export default function DashboardPage() {
             <p className="text-sm text-gray-600">Live Sepolia Testnet Overview</p>
           </div>
           <div className="flex items-center gap-4">
-            <div className="px-3 lg:px-4 py-2 rounded-lg border text-xs lg:text-sm bg-blue-50 text-blue-600 border-blue-200">
+            <button 
+              onClick={() => setShowOnramp(true)}
+              className="bg-black text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800"
+            >
+              + Add Funds (INR)
+            </button>
+            <div className="px-3 lg:px-4 py-2 rounded-lg border text-xs lg:text-sm bg-blue-50 text-blue-600 border-blue-200 hidden sm:block">
               <span className="font-medium">Status: Live</span>
             </div>
             <button className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors">

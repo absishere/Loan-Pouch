@@ -3,11 +3,12 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, Act
 import { StatusBar } from 'expo-status-bar';
 import ClayCard from '../components/ClayCard';
 import ClayButton from '../components/ClayButton';
-import { api, LoanData } from '../services/api';
+import { api } from '../services/api';
+import * as LocalAuthentication from 'expo-local-authentication';
 
 export default function LendScreen() {
   const [filter, setFilter] = useState('All');
-  const [loans, setLoans] = useState<LoanData[]>([]);
+  const [loans, setLoans] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   const filterOptions = [
@@ -26,7 +27,8 @@ export default function LendScreen() {
     try {
       setLoading(true);
       const data = await api.listLoans();
-      setLoans(data.filter(l => l.state === "Pending" || l.state === "Gathering"));
+      // state 0 = Gathering_Funds, state 1 = Pending_Guardians
+      setLoans(data.filter((l: any) => l.state === 0 || l.state === 1));
     } catch (e) {
       console.warn("Could not fetch loans", e);
     } finally {
@@ -36,7 +38,25 @@ export default function LendScreen() {
 
   const handleFund = async (loanId: string) => {
     try {
-      Alert.alert("Prototype", "We are skipping wallet signing for the prototype. Check Web Dashboard for live Sepolia funding!");
+      const hasHardware = await LocalAuthentication.hasHardwareAsync();
+      const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+
+      if (!hasHardware || !isEnrolled) {
+        Alert.alert("Security Error", "Biometric authentication is required to sign transactions.");
+        return;
+      }
+
+      const authResult = await LocalAuthentication.authenticateAsync({
+        promptMessage: 'Authenticate to sign transaction',
+        fallbackLabel: 'Use Device PIN',
+      });
+
+      if (authResult.success) {
+        // Since mobile drops WalletConnect, we just show success for the hackathon UI
+        Alert.alert("Prototype Executed", "Biometrics Passed! For true live Sepolia funding sign natively on the Web Dashboard.");
+      } else {
+        Alert.alert("Authentication Failed", "You cannot proceed without biometric approval.");
+      }
     } catch (e) {
       console.error(e);
     }
