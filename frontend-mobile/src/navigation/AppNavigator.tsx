@@ -6,7 +6,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 // Import screens
 import LandingScreen from '../screens/LandingScreen';
 import RegisterScreen from '../screens/RegisterScreen';
-import SignInScreen from '../screens/SignInScreen';
+import RecoveryScreen from '../screens/RecoveryScreen';
 import DashboardScreen from '../screens/DashboardScreen';
 import BorrowScreen from '../screens/BorrowScreen';
 import LendScreen from '../screens/LendScreen';
@@ -20,10 +20,10 @@ const Tab = createBottomTabNavigator();
 // Fixed icon component for React Native
 const TabIcon = ({ name, focused }: { name: string; focused: boolean }) => {
   const icons = {
-    Dashboard: '●', // Solid black circle for home/dashboard
-    Borrow: '↓', // Down arrow for borrow
-    Lend: '↑', // Up arrow for lend  
-    Profile: '○', // Hollow circle for profile
+    Dashboard: '●',
+    Borrow: '↓',
+    Lend: '↑',
+    Profile: '○',
   };
   
   return (
@@ -41,7 +41,7 @@ export default function AppNavigator() {
   return (
     <NavigationContainer>
       <Tab.Navigator
-        initialRouteName="Landing" // Start with landing page
+        initialRouteName="Landing"
         screenOptions={({ route }) => ({
           tabBarIcon: ({ focused }) => (
             <TabIcon name={route.name} focused={focused} />
@@ -68,11 +68,10 @@ export default function AppNavigator() {
           headerShown: false,
         })}
       >
-        {/* Main Navigation - Only 4 tabs */}
         <Tab.Screen 
           name="Dashboard" 
           component={DashboardScreen}
-          options={{ tabBarLabel: 'Home' }} // Shows as "Home" but goes to Dashboard
+          options={{ tabBarLabel: 'Home' }}
         />
         <Tab.Screen 
           name="Borrow" 
@@ -90,7 +89,6 @@ export default function AppNavigator() {
           options={{ tabBarLabel: 'Profile' }}
         />
         
-        {/* Hidden screens - No tab bar visibility */}
         <Tab.Screen 
           name="Landing" 
           component={LandingScreen}
@@ -108,8 +106,8 @@ export default function AppNavigator() {
           }}
         />
         <Tab.Screen 
-          name="SignIn" 
-          component={SignInScreen}
+          name="Recovery" 
+          component={RecoveryScreen}
           options={{ 
             tabBarButton: () => null,
             tabBarStyle: { display: 'none' }
@@ -128,6 +126,7 @@ export default function AppNavigator() {
           component={AnalyticsScreen}
           options={{ 
             tabBarButton: () => null,
+            tabBarStyle: { display: 'none' }
           }}
         />
         <Tab.Screen 
@@ -135,6 +134,7 @@ export default function AppNavigator() {
           component={HistoryScreen}
           options={{ 
             tabBarButton: () => null,
+            tabBarStyle: { display: 'none' }
           }}
         />
       </Tab.Navigator>
