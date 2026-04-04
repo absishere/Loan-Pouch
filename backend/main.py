@@ -48,11 +48,18 @@ async def startup_event():
     init_firebase()
 
 
-# ── Routers ────────────────────────────────────────────────────────────────────
+# ── Routers (v1 — legacy / SDK clients) ───────────────────────────────────────
 app.include_router(auth.router,   prefix="/api/v1")
 app.include_router(kyc.router,    prefix="/api/v1")
 app.include_router(loans.router,  prefix="/api/v1")
 app.include_router(wallet.router, prefix="/api/v1")
+
+# ── Routers (/api — Web & Mobile clients) ───────────────────────────────────
+# Both frontend clients build: BASE_URL(/api) + /loans/... → /api/loans/...
+app.include_router(auth.router,   prefix="/api")
+app.include_router(kyc.router,    prefix="/api")
+app.include_router(loans.router,  prefix="/api")
+app.include_router(wallet.router, prefix="/api")
 
 
 @app.get("/", tags=["Health"])
