@@ -5,6 +5,15 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+export const LOAN_STATE_LABELS: Record<number, string> = {
+  0: "Gathering",
+  1: "Pending",
+  2: "Disbursed",
+  3: "Repaid",
+  4: "Cancelled",
+  5: "Defaulted",
+};
+
 // Trust Score utilities
 export function getTrustScoreTier(score: number): {
   tier: string;
