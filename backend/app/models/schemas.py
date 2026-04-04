@@ -52,18 +52,21 @@ class GuardianApprovalRequest(BaseModel):
 
 class LoanResponse(BaseModel):
     id: int
-    amount: int
-    funded_amount: int
-    interest_amount: int
+    target_amount: int
+    gathered_amount: int
+    target_interest: int
     borrower: str
     guardians: List[str]
     approvals: int
-    is_funded: bool
-    is_disbursed: bool
-    is_repaid: bool
-    is_defaulted: bool
-    expires_at: int
-    deadline: int
+    rejections: int
+    state: int
+    funding_deadline: int
+    guardian_deadline: int
+    repayment_deadline: int
+    total_repaid_amount: int
+    is_milestone: bool
+    claimed_tranches: int
+    repaid_tranches: int
     risk_label: Optional[str]
     risk_probability: Optional[float]
 

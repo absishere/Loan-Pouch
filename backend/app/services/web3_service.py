@@ -71,18 +71,21 @@ def get_loan(loan_id: int) -> dict:
         loan = contract.functions.loans(loan_id).call()
         return {
             "id": loan[0],
-            "amount": loan[1],
-            "funded_amount": loan[2],
-            "interest_amount": loan[3],
+            "target_amount": loan[1],
+            "gathered_amount": loan[2],
+            "target_interest": loan[3],
             "borrower": loan[4],
             "guardians": list(loan[5]),
             "approvals": loan[6],
-            "is_funded": loan[7],
-            "is_disbursed": loan[8],
-            "is_repaid": loan[9],
-            "is_defaulted": loan[10],
-            "expires_at": loan[11],
-            "deadline": loan[12],
+            "rejections": loan[7],
+            "state": loan[8],
+            "funding_deadline": loan[9],
+            "guardian_deadline": loan[10],
+            "repayment_deadline": loan[11],
+            "total_repaid_amount": loan[12],
+            "is_milestone": loan[13],
+            "claimed_tranches": loan[14],
+            "repaid_tranches": loan[15],
         }
     except Exception as e:
         logger.error(f"get_loan error: {e}")
