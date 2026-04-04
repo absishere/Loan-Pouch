@@ -15,9 +15,7 @@ export default function SignInScreen() {
   };
 
   const handleBiometric = () => {
-    // In real app, use biometric authentication
-    // For now, just show alert without navigation
-    alert('Biometric authentication would be triggered here');
+    navigation.navigate('KYCVerification' as never);
   };
 
   const handleBack = () => {

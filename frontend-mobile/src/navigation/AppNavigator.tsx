@@ -13,6 +13,7 @@ import LendScreen from '../screens/LendScreen';
 import AnalyticsScreen from '../screens/AnalyticsScreen';
 import HistoryScreen from '../screens/HistoryScreen';
 import ProfileScreen from '../screens/ProfileScreen';
+import KYCVerificationScreen from '../screens/KYCVerificationScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -109,6 +110,14 @@ export default function AppNavigator() {
         <Tab.Screen 
           name="SignIn" 
           component={SignInScreen}
+          options={{ 
+            tabBarButton: () => null,
+            tabBarStyle: { display: 'none' }
+          }}
+        />
+        <Tab.Screen 
+          name="KYCVerification" 
+          component={KYCVerificationScreen}
           options={{ 
             tabBarButton: () => null,
             tabBarStyle: { display: 'none' }
