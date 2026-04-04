@@ -1,4 +1,4 @@
-# Loan Pouch Backend
+﻿# Loan Pouch Backend
 
 FastAPI backend for the Loan Pouch decentralized micro-lending platform.
 
@@ -23,24 +23,24 @@ API docs available at: **http://localhost:8000/docs**
 ## Firebase Setup (One-time)
 
 1. Go to [Firebase Console](https://console.firebase.google.com/)
-2. Create a new project → Name it `loan-pouch`
-3. Enable **Phone Authentication**: Authentication → Sign-in method → Phone → Enable
-4. Enable **Cloud Messaging (FCM)**: Project Settings → Cloud Messaging → Enable
-5. Go to **Project Settings → Service Accounts** → Generate new private key → Download JSON
+2. Create a new project â†’ Name it `loan-pouch`
+3. Enable **Phone Authentication**: Authentication â†’ Sign-in method â†’ Phone â†’ Enable
+4. Enable **Cloud Messaging (FCM)**: Project Settings â†’ Cloud Messaging â†’ Enable
+5. Go to **Project Settings â†’ Service Accounts** â†’ Generate new private key â†’ Download JSON
 6. Rename the downloaded file to `firebase-service-account.json`
 7. Place it inside this `backend/` folder
-8. Copy your **Web API Key** from Project Settings → General → add to `.env`:
+8. Copy your **Web API Key** from Project Settings â†’ General â†’ add to `.env`:
    ```
    FIREBASE_WEB_API_KEY=AIzaSy...
    ```
 
 ## Environment Variables
 
-Copy the root `.env` file values — `config.py` reads from `../.env` automatically.
+Copy the root `.env` file values â€” `config.py` reads from `../.env` automatically.
 
 | Variable | Description |
 |---|---|
-| `FIREBASE_WEB_API_KEY` | From Firebase Console → Project Settings → General |
+| `FIREBASE_WEB_API_KEY` | From Firebase Console â†’ Project Settings â†’ General |
 | `PINATA_API_KEY` | Already in your `.env` |
 | `PINATA_API_SECRET` | Already in your `.env` |
 | `WEB3_RPC_URL` | `http://127.0.0.1:8545` for Hardhat, or Sepolia URL |

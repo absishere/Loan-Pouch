@@ -11,7 +11,7 @@ export default function Home() {
       <header className="clay-card m-4 lg:m-8 mb-2 lg:mb-4 px-6 lg:px-12 py-4 lg:py-6">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <h1 className="text-2xl lg:text-3xl font-bold font-syne text-gray-800">LoanPouch</h1>
+          <h1 className="text-2xl lg:text-3xl font-bold font-syne text-gray-800">Loan Pouch</h1>
           
           {/* Navigation - Hidden on mobile */}
           <nav className="hidden md:flex items-center gap-6 lg:gap-8">
@@ -91,7 +91,7 @@ export default function Home() {
               <div className="w-64 h-64 sm:w-80 sm:h-80 lg:w-[500px] lg:h-[500px] rounded-3xl overflow-hidden">
                 <Image 
                   src="/images/character.jpg" 
-                  alt="LoanPouch Character" 
+                  alt="Loan Pouch Character" 
                   width={500} 
                   height={500}
                   className="object-cover"

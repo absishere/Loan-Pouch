@@ -8,7 +8,7 @@ class SendOTPRequest(BaseModel):
     phone_number: str = Field(..., example="+919876543210")
 
 class VerifyOTPRequest(BaseModel):
-    phone_number: str
+    phone_number: Optional[str] = None
     session_info: str
     otp_code: str
 

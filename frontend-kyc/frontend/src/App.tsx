@@ -11,9 +11,9 @@ function App() {
             <div className="flex justify-between items-center h-16">
               <div className="flex items-center space-x-2">
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-purple-600 to-blue-500 flex items-center justify-center">
-                  <span className="text-white font-bold tracking-tight">B</span>
+                  <span className="text-white font-bold tracking-tight">L</span>
                 </div>
-                <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-700 to-blue-600 tracking-tight">BioLend</span>
+                <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-700 to-blue-600 tracking-tight">Loan Pouch</span>
               </div>
             </div>
           </div>

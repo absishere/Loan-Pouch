@@ -13,6 +13,14 @@ export default function DashboardPage() {
   const [showOnramp, setShowOnramp] = useState(false);
   const [depositAmount, setDepositAmount] = useState<number>(5000);
   const [minting, setMinting] = useState(false);
+  const [user, setUser] = useState<{name: string} | null>(null);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("lp_user_profile");
+    if (stored) {
+      setUser(JSON.parse(stored));
+    }
+  }, []);
 
   // Expose the mock Fiat pipeline via Ethers BrowserProvider
   const handleMintBinr = async () => {
@@ -113,8 +121,8 @@ export default function DashboardPage() {
       <div className="border-b border-gray-200 bg-white px-4 lg:px-8 py-4">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div>
-            <h1 className="text-xl lg:text-2xl font-bold font-syne">Global Dashboard</h1>
-            <p className="text-sm text-gray-600">Live Sepolia Testnet Overview</p>
+            <h1 className="text-xl lg:text-2xl font-bold font-syne">Welcome, {user ? user.name : "Member"} 👋</h1>
+            <p className="text-sm text-gray-600">GlobalSepolia Testnet Overview</p>
           </div>
           <div className="flex items-center gap-4">
             <button 

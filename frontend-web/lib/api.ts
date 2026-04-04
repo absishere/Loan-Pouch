@@ -1,4 +1,4 @@
-﻿const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api";
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api";
 
 export const CONTRACTS = {
   escrow: process.env.NEXT_PUBLIC_ESCROW_ADDRESS || "",
@@ -66,11 +66,35 @@ export const api = {
 // --- KYC endpoints ---
 export const kyc = {
   uploadId: (formData: FormData, docType: "aadhaar" | "pan") =>
-    fetch(`${BASE_URL}/kyc/upload-id?doc_type=${docType}`, { method: "POST", body: formData }).then(
+    fetch(`${BASE_URL}/kyc/extract-${docType}`, { method: "POST", body: formData }).then(
       (r) => r.json()
     ),
   matchFace: (formData: FormData) =>
-    fetch(`${BASE_URL}/kyc/face-match`, { method: "POST", body: formData }).then((r) => r.json()),
+    fetch(`${BASE_URL}/kyc/match-face`, { method: "POST", body: formData }).then((r) => r.json()),
+  complete: (payload: any) => {
+    const formData = new FormData();
+    Object.keys(payload).forEach(key => formData.append(key, payload[key]));
+    return fetch(`${BASE_URL}/kyc/complete`, { method: "POST", body: formData }).then(
+      (r) => r.json()
+    );
+  }
+};
+
+// --- Auth endpoints ---
+export const auth = {
+  sendOtp: (phoneNumber: string) =>
+    req<{ status: string; session_info: string }>("/auth/send-otp", {
+      method: "POST",
+      body: JSON.stringify({ phone_number: phoneNumber }),
+    }),
+  verifyOtp: (sessionInfo: string, otpCode: string) =>
+    req<{ status: string; id_token: string; phone_number: string }>(
+      "/auth/verify-otp",
+      {
+        method: "POST",
+        body: JSON.stringify({ session_info: sessionInfo, otp_code: otpCode }),
+      }
+    ),
 };
 
 // --- Types ---
