@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+
+# Environment variables
+.env
+frontend/.env
+
+# Build output
+frontend/dist/
+frontend/build/
+
+# face-api.js model weights (downloaded via script)
+frontend/public/models/
+
+# IDE & OS
+.vscode/
+.idea/
+*.swp
+*.swo
+Thumbs.db
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.venv/
+
+# Logs
+*.log
+npm-debug.log*
