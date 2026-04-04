@@ -1,16 +1,13 @@
-import Sidebar from "@/components/layout/Sidebar";
+import DashboardLayout from "@/components/layout/DashboardLayout";
 
-export default function DashboardLayout({
+export default function Layout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
-      <Sidebar />
-      <div className="flex-1 ml-[200px]">
-        {children}
-      </div>
-    </div>
+    <DashboardLayout>
+      {children}
+    </DashboardLayout>
   );
 }
