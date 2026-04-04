@@ -1,194 +1,182 @@
-# 🏦 LoanPouch - Decentralized Lending Platform
+# LoanPouch
 
-A minimalist, blockchain-based peer-to-peer lending platform with **claymorphism design** and a gamified Trust Score system.
+LoanPouch is a decentralized lending platform prototype built for the Nakshatra Hackathon FinTech track (Problem Statement 2). The project focuses on lending for users without access to formal banking by combining biometric identity checks, trust-based underwriting, transparent loan flows, and a claymorphism-inspired web experience.
 
-![LoanPouch](https://img.shields.io/badge/Next.js-14-black)
-![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)
-![Tailwind](https://img.shields.io/badge/Tailwind-3-cyan)
-![Claymorphism](https://img.shields.io/badge/Design-Claymorphism-purple)
+This repository currently contains a Next.js frontend prototype for the LoanPouch product experience, along with the product flow and architecture notes that shape the broader system.
 
-## ✨ Features
+## Overview
 
-- 🔒 **Blockchain-based** - Secure transactions on Polygon network
-- 🎯 **Trust Score System** - Gamified creditworthiness (300-850 range)
-- 💰 **P2P Lending** - Direct lending without banks
-- 📊 **Analytics Dashboard** - Track your score and performance
-- 🔐 **Biometric Auth** - Face recognition + mPIN/tPIN security
-- 👥 **Group Lending** - Multiple lenders can fund one loan
-- ⚡ **Real-time Updates** - Live loan requests and funding status
+Traditional lending excludes many borrowers because they lack formal credit history, collateral, or banking access. LoanPouch explores an alternative model built around:
 
-## 🎨 Design
+- biometric identity verification
+- social collateral through trusted guardians
+- transparent smart-contract escrow
+- gamified trust scoring
+- secure repayment flows without centralized control
 
-**Minimalist Claymorphism Theme**
-- Soft, translucent cards with backdrop blur
-- Black sidebar (#0f0f0f) with gradient and blur effect
-- Gradient backgrounds (gray-50 to white)
-- Elevated buttons with hover animations
-- Floating character with smooth animation
-- Syne font for headings, DM Sans for body
-- Multi-layered soft shadows
-- No harsh borders, smooth transitions
+The long-term concept also includes B-INR-based settlement, document verification, SMS-based safety actions, and risk signals for lenders.
 
-## 🚀 Quick Start
+## Core Product Ideas
 
-### 1. Install Dependencies
+- Biometric KYC: Users upload identity documents, verify phone ownership, and complete live face matching before accessing the platform.
+- Guardians as social collateral: Loan requests can require 2-of-3 trusted guardians to co-sign, replacing traditional physical collateral with accountable community trust.
+- Trust Score system: Repayment behavior improves future borrowing terms, while defaults and penalties increase borrowing cost.
+- Group lending: Multiple lenders can collectively fund a single borrower request.
+- Smart-contract escrow: Funds are held and released through contract logic rather than centralized custody.
+- Duress and recovery features: Planned support includes panic mode, SMS wallet lock, and guardian-based recovery.
+- Privacy-first storage: Sensitive data is intended to be encrypted and minimized, with hashes and verification states anchored to blockchain-compatible systems rather than stored in plain centralized databases.
 
-```bash
-npm install
-```
+## Current Repository Scope
 
-### 2. Run Development Server
+The code in this repo is a web prototype built with Next.js 14 and TypeScript. It currently focuses on the user experience for:
 
-```bash
-npm run dev
-```
+- landing page
+- login and registration flow
+- borrower and lender dashboards
+- loan browsing and request flows
+- analytics and trust-score views
+- transaction history
+- profile and settings pages
 
-Visit [http://localhost:3000](http://localhost:3000)
+## User Flow
 
-## 📂 Project Structure
+### 1. Onboarding and Verification
 
-```
+- User uploads identity documents such as Aadhaar and PAN.
+- OCR extracts key details for review.
+- Phone number ownership is verified through OTP.
+- Live face verification confirms that the applicant matches the uploaded identity document.
+- The user sets up biometric access, mPIN, and transaction PIN.
+
+### 2. Borrowing
+
+- Borrower creates a loan request with amount, purpose, and duration.
+- A trust/risk evaluation is generated for lenders.
+- The request is published to the marketplace.
+- Guardians are notified to co-sign when required.
+- Requests are expected to expire or renew after a limited window.
+
+### 3. Lending and Repayment
+
+- Lender reviews borrower profile, trust score, and risk indicators.
+- Lender funds the request after secure authentication.
+- Funds are routed through escrow logic.
+- Once requirements are satisfied, funds are released to the borrower.
+- Repayments return principal and interest, while borrower trust metrics are updated.
+
+## Trust Model
+
+LoanPouch combines a score-based and behavior-based approach:
+
+- UI/analytics currently model a trust score range from 300 to 850.
+- Timely repayment improves future loan terms.
+- Missed or defaulted repayment increases borrowing cost.
+- Planned scoring factors include repayment punctuality, transaction consistency, guardian/network trust, and loan-to-repay ratio.
+
+## Tech Stack
+
+### Implemented in this repo
+
+- Next.js 14
+- React 18
+- TypeScript
+- Tailwind CSS
+- Framer Motion
+- Recharts
+- Lucide React
+- shadcn/ui-style component structure
+
+### Planned platform components
+
+- FastAPI for OCR, face-match, and risk services
+- Firebase for OTP and notifications
+- Solidity smart contracts for escrow and trust logic
+- IPFS or similar encrypted document storage
+- Polygon or Ethereum-compatible networks for settlement logic
+
+## Project Structure
+
+```text
 Loan-Pouch/
-├── app/
-│   ├── (auth)/
-│   │   ├── login/          # mPIN login page
-│   │   └── register/       # Multi-step KYC registration
-│   ├── (dashboard)/
-│   │   ├── dashboard/      # Main dashboard
-│   │   ├── borrow/         # Create loan request
-│   │   ├── lend/           # Browse & fund loans
-│   │   ├── analytics/      # Trust Score breakdown
-│   │   ├── history/        # Transaction history
-│   │   └── profile/        # User profile & settings
-│   ├── layout.tsx          # Root layout with fonts
-│   ├── page.tsx            # Landing page
-│   └── globals.css         # Global styles
-├── components/
-│   ├── layout/
-│   │   └── Sidebar.tsx     # Navigation sidebar
-│   ├── ui/                 # shadcn/ui components
-│   └── shared/             # Reusable components
-├── lib/
-│   ├── utils.ts            # Utility functions
-│   └── mock-data.ts        # Sample data for demo
-└── public/                 # Static assets
+|-- app/
+|   |-- (auth)/
+|   |   |-- login/
+|   |   `-- register/
+|   |-- (dashboard)/
+|   |   |-- analytics/
+|   |   |-- borrow/
+|   |   |-- dashboard/
+|   |   |-- history/
+|   |   |-- lend/
+|   |   `-- profile/
+|   |-- globals.css
+|   |-- layout.tsx
+|   `-- page.tsx
+|-- components/
+|-- lib/
+|-- public/
+|-- RawFlow.md
+`-- README.md
 ```
 
-## 🛠️ Tech Stack
+## Routes
 
-### Frontend
-- **Next.js 14** - React framework with App Router
-- **TypeScript** - Type safety
-- **Tailwind CSS** - Utility-first styling
-- **shadcn/ui** - Component library
-- **Recharts** - Data visualization
-- **Framer Motion** - Animations
-- **Lucide Icons** - Beautiful icons
+| Route | Purpose |
+| --- | --- |
+| `/` | Landing page |
+| `/login` | Login flow |
+| `/register` | Registration and KYC flow |
+| `/dashboard` | Main dashboard |
+| `/borrow` | Borrower request flow |
+| `/lend` | Loan marketplace for lenders |
+| `/analytics` | Trust score and performance views |
+| `/history` | Loan and transaction history |
+| `/profile` | User settings and profile |
 
-### Backend (Future)
-- **Node.js + Express** - API server
-- **Firebase** - Authentication & OTP
-- **Polygon** - Blockchain network
-- **Solidity** - Smart contracts
-
-## 📄 Pages
-
-| Route | Description |
-|-------|-------------|
-| `/` | Landing page with features |
-| `/login` | mPIN login |
-| `/register` | Multi-step KYC registration |
-| `/dashboard` | Main dashboard with stats |
-| `/borrow` | Create loan request |
-| `/lend` | Browse and fund loans |
-| `/analytics` | Trust Score analytics |
-| `/history` | Transaction history |
-| `/profile` | User profile & settings |
-
-## 🎯 Trust Score System
-
-- **Range**: 0-850 (initialized at 300)
-- **Tiers**:
-  - 0-300: New Member → 8% base rate
-  - 301-500: Trusted → 6% base rate
-  - 501-650: Reliable → 5% base rate
-  - 651-850: Elite → 4% base rate (floor)
-- **Scoring Factors**:
-  - Repayment Punctuality: 35%
-  - Transaction Consistency: 25%
-  - Network Trust: 20%
-  - Loan-to-Repay Ratio: 20%
-
-## 🔧 Development Commands
+## Quick Start
 
 ```bash
-# Install dependencies
 npm install
-
-# Run dev server
 npm run dev
+```
 
-# Build for production
+Open `http://localhost:3000` in the browser.
+
+## Development Commands
+
+```bash
+npm install
+npm run dev
 npm run build
-
-# Start production server
 npm start
-
-# Run linter
 npm run lint
 ```
 
-## 🎨 Color Palette
+## Current Status
 
-```css
-Black Sidebar: #0f0f0f
-White Background: #ffffff
-Success Green: #4ade80
-Danger Red: #e24b4a
-Border Gray: #e5e7eb
-Text Gray: #6b7280
-```
+Completed:
 
-## 📱 Responsive Design
+- landing page and visual direction
+- login and registration UI
+- dashboard screens
+- trust score analytics views
+- loan history and profile screens
+- claymorphism-inspired styling system
 
-The UI is fully responsive with:
-- Desktop: Sidebar + main content layout
-- Tablet: Collapsible sidebar
-- Mobile: Bottom navigation (future)
+Planned:
 
-## 🔐 Security Features
+- backend integration
+- biometric verification pipeline
+- OTP and notification flows
+- smart contracts and escrow
+- B-INR transaction simulation
+- production-grade security and recovery flows
 
-- Biometric authentication
-- mPIN for login
-- tPIN for transactions
-- Recovery guardians (2-of-3 multisig)
-- Panic mode with decoy wallet
-- SMS wallet lock
+## Notes
 
-## 🚧 Current Status
+- `RawFlow.md` captures the broader problem statement, constraints, and product thinking that informed this prototype.
+- The current application branding in code and UI is `LoanPouch`, even though some imported product notes describe the concept in alternate wording.
 
-✅ **Completed**
-- Landing page
-- Login/Register UI
-- Main dashboard
-- All authenticated pages
-- Trust Score analytics
-- Transaction history
-- Profile management
-- Minimalist black & white theme
+## License
 
-⏳ **Todo**
-- Backend API integration
-- Blockchain smart contracts
-- Biometric authentication
-- Payment gateway integration
-- Real-time notifications
-
-## 📝 License
-
-MIT License - feel free to use for your projects!
-
-## 👨‍💻 Author
-
-Built with ❤️ for decentralized finance
-A project for Nakshatra Hackathon under FinTech domain following PS 2.
+MIT
