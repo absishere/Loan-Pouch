@@ -1,229 +1,285 @@
-import React from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TextInput, ScrollView, SafeAreaView, TouchableOpacity } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import ClayCard from '../components/ClayCard';
+import ClayButton from '../components/ClayButton';
 
 export default function BorrowScreen() {
+  const [amount, setAmount] = useState('');
+  const [duration, setDuration] = useState('7');
+  const [purpose, setPurpose] = useState('');
+
+  const durationOptions = [
+    { value: '7', label: '7 days' },
+    { value: '15', label: '15 days' },
+    { value: '30', label: '30 days' },
+  ];
+
+  const purposeOptions = [
+    { value: 'medical', label: '🏥 Medical', icon: '🏥' },
+    { value: 'education', label: '📚 Education', icon: '📚' },
+    { value: 'emergency', label: '🚨 Emergency', icon: '🚨' },
+    { value: 'personal', label: '💼 Personal', icon: '💼' },
+  ];
+
+  const calculateRepayment = () => {
+    const principal = parseFloat(amount) || 5000;
+    const rate = 5.2; // Based on Trust Score
+    const days = parseInt(duration);
+    const interest = (principal * rate * days) / (365 * 100);
+    return principal + interest;
+  };
+
   return (
-    <ScrollView style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <StatusBar style="dark" />
       
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>💰 Request a Loan</Text>
-        <Text style={styles.subtitle}>Quick and secure lending</Text>
+        <Text style={styles.headerTitle}>Request Loan</Text>
+        <Text style={styles.headerSubtitle}>Quick and secure lending</Text>
       </View>
 
-      {/* Loan Amount Card */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Loan Amount</Text>
-        <View style={styles.amountContainer}>
-          <Text style={styles.currency}>₹</Text>
-          <TextInput 
-            style={styles.amountInput}
-            placeholder="5,000"
-            keyboardType="numeric"
-          />
-        </View>
-        <Text style={styles.helper}>Range: ₹500 - ₹25,000</Text>
-      </View>
+      <ScrollView showsVerticalScrollIndicator={false} style={styles.content}>
+        
+        {/* Loan Amount Card */}
+        <ClayCard style={styles.sectionCard}>
+          <Text style={styles.sectionTitle}>Loan Amount</Text>
+          <View style={styles.amountContainer}>
+            <Text style={styles.currency}>₹</Text>
+            <TextInput 
+              style={styles.amountInput}
+              placeholder="5,000"
+              value={amount}
+              onChangeText={setAmount}
+              keyboardType="numeric"
+              placeholderTextColor="#9ca3af"
+            />
+          </View>
+          <Text style={styles.helperText}>Range: ₹500 - ₹25,000</Text>
+        </ClayCard>
 
-      {/* Duration Card */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Repayment Duration</Text>
-        <View style={styles.durationButtons}>
-          <TouchableOpacity style={[styles.durationBtn, styles.activeDuration]}>
-            <Text style={styles.durationText}>7 days</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.durationBtn}>
-            <Text style={styles.durationText}>15 days</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.durationBtn}>
-            <Text style={styles.durationText}>30 days</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+        {/* Duration Selection */}
+        <ClayCard style={styles.sectionCard}>
+          <Text style={styles.sectionTitle}>Repayment Duration</Text>
+          <View style={styles.optionsGrid}>
+            {durationOptions.map((option) => (
+              <ClayButton
+                key={option.value}
+                title={option.label}
+                variant={duration === option.value ? 'primary' : 'secondary'}
+                onPress={() => setDuration(option.value)}
+                style={styles.optionButton}
+              />
+            ))}
+          </View>
+        </ClayCard>
 
-      {/* Purpose Card */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Purpose</Text>
-        <View style={styles.purposeButtons}>
-          <TouchableOpacity style={styles.purposeBtn}>
-            <Text style={styles.purposeText}>🏥 Medical</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.purposeBtn}>
-            <Text style={styles.purposeText}>📚 Education</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.purposeBtn}>
-            <Text style={styles.purposeText}>🚨 Emergency</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.purposeBtn}>
-            <Text style={styles.purposeText}>💼 Personal</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+        {/* Purpose Selection */}
+        <ClayCard style={styles.sectionCard}>
+          <Text style={styles.sectionTitle}>Purpose</Text>
+          <View style={styles.purposeGrid}>
+            {purposeOptions.map((option) => (
+              <TouchableOpacity
+                key={option.value}
+                style={[
+                  styles.purposeOption,
+                  purpose === option.value && styles.purposeOptionActive
+                ]}
+                onPress={() => setPurpose(option.value)}
+              >
+                <ClayCard style={styles.purposeCard}>
+                  <Text style={styles.purposeIcon}>{option.icon}</Text>
+                  <Text style={[
+                    styles.purposeText,
+                    purpose === option.value && styles.purposeTextActive
+                  ]}>
+                    {option.label.replace(/🏥|📚|🚨|💼\s/, '')}
+                  </Text>
+                </ClayCard>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </ClayCard>
 
-      {/* Interest Rate Preview */}
-      <View style={styles.previewCard}>
-        <Text style={styles.previewTitle}>Interest Rate Preview</Text>
-        <View style={styles.rateRow}>
-          <Text style={styles.rateLabel}>Based on Trust Score (650)</Text>
-          <Text style={styles.rateValue}>5.2% APR</Text>
-        </View>
-        <View style={styles.rateRow}>
-          <Text style={styles.rateLabel}>Total Repayment</Text>
-          <Text style={styles.rateValue}>₹5,090</Text>
-        </View>
-      </View>
+        {/* Interest Rate Preview */}
+        <ClayCard style={styles.previewCard}>
+          <Text style={styles.previewTitle}>💡 Rate Preview</Text>
+          
+          <View style={styles.previewRow}>
+            <Text style={styles.previewLabel}>Trust Score</Text>
+            <Text style={styles.previewValue}>650 (Reliable)</Text>
+          </View>
+          
+          <View style={styles.previewRow}>
+            <Text style={styles.previewLabel}>Interest Rate</Text>
+            <Text style={styles.previewValue}>5.2% APR</Text>
+          </View>
+          
+          <View style={styles.previewRow}>
+            <Text style={styles.previewLabel}>Total Repayment</Text>
+            <Text style={styles.previewValueHighlight}>
+              ₹{calculateRepayment().toLocaleString()}
+            </Text>
+          </View>
+        </ClayCard>
 
-      {/* Request Button */}
-      <TouchableOpacity style={styles.requestButton}>
-        <Text style={styles.requestButtonText}>📝 Submit Loan Request</Text>
-      </TouchableOpacity>
-      
-      <View style={styles.bottomSpacing} />
-    </ScrollView>
+        {/* Submit Button */}
+        <ClayButton 
+          title="📝 Submit Loan Request"
+          variant="primary"
+          style={styles.submitButton}
+          onPress={() => {
+            // Handle loan request submission
+            console.log('Loan request submitted');
+          }}
+        />
+
+        <View style={styles.bottomSpacing} />
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f3f4f6',
+    backgroundColor: '#e5e7eb',
   },
   header: {
-    padding: 20,
-    paddingTop: 50,
     backgroundColor: 'white',
     borderBottomWidth: 1,
     borderBottomColor: '#e5e7eb',
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    paddingTop: 60,
   },
-  title: {
+  headerTitle: {
     fontSize: 24,
     fontWeight: 'bold',
     color: '#1f2937',
+    marginBottom: 4,
   },
-  subtitle: {
+  headerSubtitle: {
     fontSize: 14,
     color: '#6b7280',
-    marginTop: 4,
   },
-  card: {
-    backgroundColor: 'white',
-    margin: 16,
-    padding: 20,
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
+  content: {
+    flex: 1,
+    padding: 16,
   },
-  cardTitle: {
-    fontSize: 16,
+  sectionCard: {
+    padding: 24,
+    marginBottom: 16,
+  },
+  sectionTitle: {
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#1f2937',
-    marginBottom: 12,
+    marginBottom: 16,
   },
   amountContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#3b82f6',
-    borderRadius: 8,
-    padding: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   currency: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#3b82f6',
+    color: '#1f2937',
     marginRight: 8,
   },
   amountInput: {
     fontSize: 24,
     fontWeight: 'bold',
+    color: '#1f2937',
     flex: 1,
   },
-  helper: {
+  helperText: {
     fontSize: 12,
     color: '#6b7280',
-    marginTop: 8,
+    textAlign: 'center',
   },
-  durationButtons: {
+  optionsGrid: {
     flexDirection: 'row',
     gap: 8,
   },
-  durationBtn: {
+  optionButton: {
     flex: 1,
-    padding: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-    alignItems: 'center',
   },
-  activeDuration: {
-    backgroundColor: '#3b82f6',
-    borderColor: '#3b82f6',
-  },
-  durationText: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  purposeButtons: {
+  purposeGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    justifyContent: 'space-between',
   },
-  purposeBtn: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: '#f3f4f6',
-    borderWidth: 1,
-    borderColor: '#d1d5db',
+  purposeOption: {
+    width: '48%',
+    marginBottom: 12,
+  },
+  purposeOptionActive: {
+    transform: [{ scale: 1.02 }],
+  },
+  purposeCard: {
+    padding: 16,
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.6)',
+  },
+  purposeIcon: {
+    fontSize: 24,
+    marginBottom: 8,
   },
   purposeText: {
     fontSize: 14,
+    fontWeight: '600',
+    color: '#6b7280',
+  },
+  purposeTextActive: {
     color: '#1f2937',
   },
   previewCard: {
-    backgroundColor: '#f0f9ff',
-    margin: 16,
-    padding: 20,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#3b82f6',
+    padding: 24,
+    marginBottom: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
   },
   previewTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#1f2937',
-    marginBottom: 12,
+    marginBottom: 16,
   },
-  rateRow: {
+  previewRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    alignItems: 'center',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f3f4f6',
   },
-  rateLabel: {
+  previewLabel: {
     fontSize: 14,
     color: '#6b7280',
   },
-  rateValue: {
+  previewValue: {
     fontSize: 14,
-    fontWeight: 'bold',
-    color: '#3b82f6',
+    fontWeight: '600',
+    color: '#1f2937',
   },
-  requestButton: {
-    backgroundColor: '#3b82f6',
-    margin: 16,
-    padding: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  requestButtonText: {
-    color: 'white',
-    fontSize: 18,
+  previewValueHighlight: {
+    fontSize: 16,
     fontWeight: 'bold',
+    color: '#000000',
+  },
+  submitButton: {
+    marginHorizontal: 0,
+    marginBottom: 16,
   },
   bottomSpacing: {
     height: 100,

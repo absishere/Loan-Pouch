@@ -1,38 +1,83 @@
-// Clay Button Component for Claymorphism Design
-import React from 'react';
-import { TouchableOpacity, Text, TouchableOpacityProps } from 'react-native';
+// Claymorphism Button - Matches Web Design
+import React, { useState } from 'react';
+import { TouchableOpacity, Text, StyleSheet, ViewStyle, Animated } from 'react-native';
 
-interface ClayButtonProps extends TouchableOpacityProps {
+interface ClayButtonProps {
   title: string;
+  onPress?: () => void;
   variant?: 'primary' | 'secondary';
-  className?: string;
+  style?: ViewStyle;
 }
 
-export default function ClayButton({ 
-  title, 
-  variant = 'primary', 
-  className = '',
-  ...props 
-}: ClayButtonProps) {
-  const baseClasses = "px-8 py-4 rounded-full font-medium text-lg";
-  const variantClasses = {
-    primary: "bg-black",
-    secondary: "bg-white/25 backdrop-blur-lg border border-white/20"
+export default function ClayButton({ title, onPress, variant = 'primary', style }: ClayButtonProps) {
+  const [scaleAnim] = useState(new Animated.Value(1));
+
+  const handlePressIn = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 1.05,
+      useNativeDriver: true,
+    }).start();
   };
-  
-  const textClasses = {
-    primary: "text-white font-bold text-center",
-    secondary: "text-gray-800 font-bold text-center"
+
+  const handlePressOut = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      useNativeDriver: true,
+    }).start();
   };
 
   return (
-    <TouchableOpacity 
-      className={`${baseClasses} ${variantClasses[variant]} ${className}`}
-      {...props}
-    >
-      <Text className={textClasses[variant]}>
-        {title}
-      </Text>
-    </TouchableOpacity>
+    <Animated.View style={[{ transform: [{ scale: scaleAnim }] }, style]}>
+      <TouchableOpacity 
+        style={[
+          styles.button, 
+          variant === 'primary' ? styles.primaryButton : styles.secondaryButton,
+        ]}
+        onPress={onPress}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        activeOpacity={0.8}
+      >
+        <Text style={[
+          styles.buttonText,
+          variant === 'primary' ? styles.primaryText : styles.secondaryText
+        ]}>
+          {title}
+        </Text>
+      </TouchableOpacity>
+    </Animated.View>
   );
 }
+
+const styles = StyleSheet.create({
+  button: {
+    paddingVertical: 14,
+    paddingHorizontal: 32,
+    borderRadius: 25,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  primaryButton: {
+    backgroundColor: '#000000',
+  },
+  secondaryButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.1)',
+  },
+  buttonText: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  primaryText: {
+    color: '#ffffff',
+  },
+  secondaryText: {
+    color: '#1f2937',
+  },
+});

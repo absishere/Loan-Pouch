@@ -1,147 +1,284 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, SafeAreaView } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import { useNavigation } from '@react-navigation/native';
+import ClayCard from '../components/ClayCard';
+import ClayButton from '../components/ClayButton';
 
 export default function ProfileScreen() {
-  const [biometricEnabled, setBiometricEnabled] = React.useState(true);
-  const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
+  const navigation = useNavigation();
+  const [biometricEnabled, setBiometricEnabled] = useState(true);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+
+  const trustScore = 650;
+  const maxScore = 850;
+  const scorePercentage = (trustScore / maxScore) * 100;
 
   return (
-    <ScrollView style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <StatusBar style="dark" />
       
       {/* Header */}
       <View style={styles.header}>
-        <View style={styles.profileSection}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>RS</Text>
+        <Text style={styles.headerTitle}>Profile</Text>
+        <Text style={styles.headerSubtitle}>Manage your account and settings</Text>
+      </View>
+
+      <ScrollView showsVerticalScrollIndicator={false} style={styles.content}>
+        
+        {/* Profile Info */}
+        <ClayCard style={styles.profileCard}>
+          <View style={styles.profileSection}>
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>RS</Text>
+            </View>
+            <View style={styles.userInfo}>
+              <Text style={styles.userName}>Rahul Sharma</Text>
+              <Text style={styles.userEmail}>rahul.sharma@email.com</Text>
+              <Text style={styles.userPhone}>+91 98765 43210</Text>
+            </View>
+            <TouchableOpacity style={styles.editButton}>
+              <Text style={styles.editText}>✏️</Text>
+            </TouchableOpacity>
           </View>
-          <View style={styles.userInfo}>
-            <Text style={styles.userName}>Rahul Sharma</Text>
-            <Text style={styles.userEmail}>rahul.sharma@email.com</Text>
+        </ClayCard>
+
+        {/* Trust Score */}
+        <ClayCard style={styles.trustCard}>
+          <Text style={styles.sectionTitle}>🏆 Trust Score</Text>
+          
+          <View style={styles.scoreContainer}>
+            <View style={styles.scoreCircle}>
+              <Text style={styles.scoreNumber}>{trustScore}</Text>
+              <Text style={styles.scoreMax}>/{maxScore}</Text>
+            </View>
+            
+            <View style={styles.scoreDetails}>
+              <View style={styles.scoreRow}>
+                <Text style={styles.scoreLabel}>Current Tier</Text>
+                <Text style={styles.scoreTier}>Reliable</Text>
+              </View>
+              <View style={styles.scoreRow}>
+                <Text style={styles.scoreLabel}>Interest Rate</Text>
+                <Text style={styles.scoreRate}>5.2%</Text>
+              </View>
+              <View style={styles.scoreRow}>
+                <Text style={styles.scoreLabel}>Next Milestone</Text>
+                <Text style={styles.scoreNext}>Elite (651+)</Text>
+              </View>
+            </View>
           </View>
-        </View>
-      </View>
+          
+          <View style={styles.progressContainer}>
+            <View style={styles.progressBar}>
+              <View style={[styles.progressFill, { width: `${scorePercentage}%` }]} />
+            </View>
+            <Text style={styles.progressText}>
+              {651 - trustScore} points to Elite tier
+            </Text>
+          </View>
+        </ClayCard>
 
-      {/* Trust Score Card */}
-      <View style={styles.trustCard}>
-        <Text style={styles.trustTitle}>Trust Score</Text>
-        <View style={styles.trustRow}>
-          <Text style={styles.trustScore}>650</Text>
-          <Text style={styles.trustTier}>Reliable</Text>
-        </View>
-        <View style={styles.progressBar}>
-          <View style={[styles.progressFill, { width: '65%' }]} />
-        </View>
-        <Text style={styles.trustSubtext}>
-          Repay 2 more loans on time to reach Elite status (700+)
-        </Text>
-      </View>
+        {/* Wallet Info */}
+        <ClayCard style={styles.walletCard}>
+          <Text style={styles.sectionTitle}>💳 B-INR Wallet</Text>
+          
+          <View style={styles.walletBalance}>
+            <Text style={styles.balanceAmount}>₹15,240</Text>
+            <Text style={styles.balanceLabel}>Available Balance</Text>
+          </View>
+          
+          <View style={styles.walletDetails}>
+            <Text style={styles.walletAddress}>0x742d35cc...8f9a2b</Text>
+            <TouchableOpacity style={styles.copyButton}>
+              <Text style={styles.copyText}>📋</Text>
+            </TouchableOpacity>
+          </View>
+          
+          <View style={styles.walletActions}>
+            <ClayButton 
+              title="💰 Add Funds"
+              variant="primary"
+              style={styles.walletButton}
+              onPress={() => console.log('Add funds')}
+            />
+            <ClayButton 
+              title="💸 Withdraw"
+              variant="secondary"
+              style={styles.walletButton}
+              onPress={() => console.log('Withdraw')}
+            />
+          </View>
+        </ClayCard>
 
-      {/* Wallet Info */}
-      <View style={styles.walletCard}>
-        <Text style={styles.walletTitle}>💳 Wallet</Text>
-        <Text style={styles.walletBalance}>₹15,240</Text>
-        <Text style={styles.walletAddress}>0x742d35...8f9a2b</Text>
-        <TouchableOpacity style={styles.addFundsButton}>
-          <Text style={styles.addFundsText}>Add Funds</Text>
-        </TouchableOpacity>
-      </View>
+        {/* Security Settings */}
+        <ClayCard style={styles.settingsCard}>
+          <Text style={styles.sectionTitle}>🔒 Security Settings</Text>
+          
+          <View style={styles.settingItem}>
+            <View style={styles.settingInfo}>
+              <Text style={styles.settingLabel}>Biometric Authentication</Text>
+              <Text style={styles.settingDesc}>Use fingerprint/face unlock</Text>
+            </View>
+            <Switch 
+              value={biometricEnabled}
+              onValueChange={setBiometricEnabled}
+              trackColor={{ false: '#e5e7eb', true: '#1f2937' }}
+              thumbColor={biometricEnabled ? '#ffffff' : '#f4f3f4'}
+            />
+          </View>
+          
+          <View style={styles.settingItem}>
+            <View style={styles.settingInfo}>
+              <Text style={styles.settingLabel}>Push Notifications</Text>
+              <Text style={styles.settingDesc}>Loan updates and alerts</Text>
+            </View>
+            <Switch 
+              value={notificationsEnabled}
+              onValueChange={setNotificationsEnabled}
+              trackColor={{ false: '#e5e7eb', true: '#1f2937' }}
+              thumbColor={notificationsEnabled ? '#ffffff' : '#f4f3f4'}
+            />
+          </View>
+          
+          <TouchableOpacity style={styles.settingButton}>
+            <Text style={styles.settingLabel}>🛡️ Recovery Guardians</Text>
+            <Text style={styles.settingValue}>3 Added →</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity style={styles.settingButton}>
+            <Text style={styles.settingLabel}>🔑 Change mPIN</Text>
+            <Text style={styles.settingValue}>→</Text>
+          </TouchableOpacity>
+        </ClayCard>
 
-      {/* Settings */}
-      <View style={styles.settingsCard}>
-        <Text style={styles.settingsTitle}>⚙️ Settings</Text>
-        
-        <View style={styles.settingItem}>
-          <Text style={styles.settingLabel}>🔒 Biometric Authentication</Text>
-          <Switch 
-            value={biometricEnabled}
-            onValueChange={setBiometricEnabled}
-          />
-        </View>
-        
-        <View style={styles.settingItem}>
-          <Text style={styles.settingLabel}>🔔 Push Notifications</Text>
-          <Switch 
-            value={notificationsEnabled}
-            onValueChange={setNotificationsEnabled}
-          />
-        </View>
-        
-        <TouchableOpacity style={styles.settingItem}>
-          <Text style={styles.settingLabel}>🛡️ Recovery Guardians</Text>
-          <Text style={styles.settingValue}>3 Added</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity style={styles.settingItem}>
-          <Text style={styles.settingLabel}>📱 Export Trust Score</Text>
-          <Text style={styles.settingValue}>PDF</Text>
-        </TouchableOpacity>
-      </View>
+        {/* Quick Actions */}
+        <ClayCard style={styles.actionsCard}>
+          <Text style={styles.sectionTitle}>🚀 Quick Actions</Text>
+          
+          <TouchableOpacity 
+            style={styles.actionButton}
+            onPress={() => navigation.navigate('History' as never)}
+          >
+            <View style={styles.actionContent}>
+              <Text style={styles.actionIcon}>📊</Text>
+              <View style={styles.actionInfo}>
+                <Text style={styles.actionLabel}>Transaction History</Text>
+                <Text style={styles.actionDesc}>View all your activity</Text>
+              </View>
+            </View>
+            <Text style={styles.actionArrow}>→</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={styles.actionButton}
+            onPress={() => navigation.navigate('Analytics' as never)}
+          >
+            <View style={styles.actionContent}>
+              <Text style={styles.actionIcon}>📈</Text>
+              <View style={styles.actionInfo}>
+                <Text style={styles.actionLabel}>Trust Score Analytics</Text>
+                <Text style={styles.actionDesc}>Detailed score breakdown</Text>
+              </View>
+            </View>
+            <Text style={styles.actionArrow}>→</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity style={styles.actionButton}>
+            <View style={styles.actionContent}>
+              <Text style={styles.actionIcon}>📄</Text>
+              <View style={styles.actionInfo}>
+                <Text style={styles.actionLabel}>Export Trust Score</Text>
+                <Text style={styles.actionDesc}>Download PDF certificate</Text>
+              </View>
+            </View>
+            <Text style={styles.actionArrow}>→</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity style={styles.actionButton}>
+            <View style={styles.actionContent}>
+              <Text style={styles.actionIcon}>🤝</Text>
+              <View style={styles.actionInfo}>
+                <Text style={styles.actionLabel}>Refer Friends</Text>
+                <Text style={styles.actionDesc}>Invite others to earn rewards</Text>
+              </View>
+            </View>
+            <Text style={styles.actionArrow}>→</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity style={styles.actionButton}>
+            <View style={styles.actionContent}>
+              <Text style={styles.actionIcon}>💡</Text>
+              <View style={styles.actionInfo}>
+                <Text style={styles.actionLabel}>Help & Support</Text>
+                <Text style={styles.actionDesc}>Get assistance</Text>
+              </View>
+            </View>
+            <Text style={styles.actionArrow}>→</Text>
+          </TouchableOpacity>
+        </ClayCard>
 
-      {/* Quick Actions */}
-      <View style={styles.actionsCard}>
-        <Text style={styles.actionsTitle}>🚀 Quick Actions</Text>
-        
-        <TouchableOpacity style={styles.actionItem}>
-          <Text style={styles.actionLabel}>📊 Transaction History</Text>
-          <Text style={styles.actionArrow}>→</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity style={styles.actionItem}>
-          <Text style={styles.actionLabel}>🤝 Refer Friends</Text>
-          <Text style={styles.actionArrow}>→</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity style={styles.actionItem}>
-          <Text style={styles.actionLabel}>💡 Help & Support</Text>
-          <Text style={styles.actionArrow}>→</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity style={styles.actionItem}>
-          <Text style={styles.actionLabel}>📋 Privacy Policy</Text>
-          <Text style={styles.actionArrow}>→</Text>
-        </TouchableOpacity>
-      </View>
+        {/* Logout Button */}
+        <ClayButton 
+          title="🚪 Logout"
+          variant="secondary"
+          style={styles.logoutButton}
+          onPress={() => navigation.navigate('Landing' as never)}
+        />
 
-      {/* Logout */}
-      <TouchableOpacity style={styles.logoutButton}>
-        <Text style={styles.logoutText}>🚪 Logout</Text>
-      </TouchableOpacity>
-
-      <View style={styles.bottomSpacing} />
-    </ScrollView>
+        <View style={styles.bottomSpacing} />
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f3f4f6',
+    backgroundColor: '#e5e7eb',
   },
   header: {
     backgroundColor: 'white',
-    padding: 20,
-    paddingTop: 50,
     borderBottomWidth: 1,
     borderBottomColor: '#e5e7eb',
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    paddingTop: 60,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#1f2937',
+    marginBottom: 4,
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    color: '#6b7280',
+  },
+  content: {
+    flex: 1,
+    padding: 16,
+  },
+  profileCard: {
+    padding: 20,
+    marginBottom: 16,
   },
   profileSection: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   avatar: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: '#3b82f6',
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#1f2937',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 16,
   },
   avatarText: {
     color: 'white',
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: 'bold',
   },
   userInfo: {
@@ -151,171 +288,235 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     color: '#1f2937',
+    marginBottom: 4,
   },
   userEmail: {
     fontSize: 14,
     color: '#6b7280',
-    marginTop: 4,
+    marginBottom: 2,
   },
-  trustCard: {
-    backgroundColor: 'white',
-    margin: 16,
-    padding: 20,
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  trustTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#1f2937',
-    marginBottom: 12,
-  },
-  trustRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    marginBottom: 12,
-  },
-  trustScore: {
-    fontSize: 36,
-    fontWeight: 'bold',
-    color: '#10b981',
-    marginRight: 12,
-  },
-  trustTier: {
-    fontSize: 16,
+  userPhone: {
+    fontSize: 14,
     color: '#6b7280',
   },
+  editButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  editText: {
+    fontSize: 16,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1f2937',
+    marginBottom: 16,
+  },
+  trustCard: {
+    padding: 24,
+    marginBottom: 16,
+  },
+  scoreContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  scoreCircle: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: 'rgba(31, 41, 55, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 20,
+  },
+  scoreNumber: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#1f2937',
+  },
+  scoreMax: {
+    fontSize: 12,
+    color: '#6b7280',
+  },
+  scoreDetails: {
+    flex: 1,
+  },
+  scoreRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  scoreLabel: {
+    fontSize: 14,
+    color: '#6b7280',
+  },
+  scoreTier: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#10b981',
+  },
+  scoreRate: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1f2937',
+  },
+  scoreNext: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#f59e0b',
+  },
+  progressContainer: {
+    width: '100%',
+  },
   progressBar: {
+    width: '100%',
     height: 8,
     backgroundColor: '#e5e7eb',
     borderRadius: 4,
-    marginBottom: 8,
+    overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#10b981',
+    backgroundColor: '#1f2937',
     borderRadius: 4,
   },
-  trustSubtext: {
+  progressText: {
     fontSize: 12,
     color: '#6b7280',
+    textAlign: 'center',
+    marginTop: 8,
   },
   walletCard: {
-    backgroundColor: '#1f2937',
-    margin: 16,
-    padding: 20,
-    borderRadius: 12,
-  },
-  walletTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: 'white',
-    marginBottom: 8,
+    padding: 24,
+    marginBottom: 16,
+    backgroundColor: 'rgba(31, 41, 55, 0.05)',
   },
   walletBalance: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: 'white',
-    marginBottom: 8,
-  },
-  walletAddress: {
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.7)',
-    fontFamily: 'monospace',
+    alignItems: 'center',
     marginBottom: 16,
   },
-  addFundsButton: {
-    backgroundColor: 'white',
+  balanceAmount: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#1f2937',
+    marginBottom: 4,
+  },
+  balanceLabel: {
+    fontSize: 14,
+    color: '#6b7280',
+  },
+  walletDetails: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
     padding: 12,
     borderRadius: 8,
-    alignItems: 'center',
   },
-  addFundsText: {
-    color: '#1f2937',
+  walletAddress: {
     fontSize: 14,
-    fontWeight: 'bold',
+    fontFamily: 'monospace',
+    color: '#6b7280',
+    marginRight: 8,
+  },
+  copyButton: {
+    padding: 4,
+  },
+  copyText: {
+    fontSize: 14,
+  },
+  walletActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  walletButton: {
+    flex: 1,
   },
   settingsCard: {
-    backgroundColor: 'white',
-    margin: 16,
-    padding: 20,
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  settingsTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#1f2937',
+    padding: 24,
     marginBottom: 16,
   },
   settingItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#f3f4f6',
   },
+  settingInfo: {
+    flex: 1,
+  },
   settingLabel: {
-    fontSize: 14,
+    fontSize: 16,
+    fontWeight: '600',
     color: '#1f2937',
+    marginBottom: 2,
+  },
+  settingDesc: {
+    fontSize: 12,
+    color: '#6b7280',
+  },
+  settingButton: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f3f4f6',
   },
   settingValue: {
     fontSize: 14,
     color: '#6b7280',
   },
   actionsCard: {
-    backgroundColor: 'white',
-    margin: 16,
-    padding: 20,
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  actionsTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#1f2937',
+    padding: 24,
     marginBottom: 16,
   },
-  actionItem: {
+  actionButton: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#f3f4f6',
   },
+  actionContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  actionIcon: {
+    fontSize: 20,
+    marginRight: 16,
+  },
+  actionInfo: {
+    flex: 1,
+  },
   actionLabel: {
-    fontSize: 14,
+    fontSize: 16,
+    fontWeight: '600',
     color: '#1f2937',
+    marginBottom: 2,
+  },
+  actionDesc: {
+    fontSize: 12,
+    color: '#6b7280',
   },
   actionArrow: {
-    fontSize: 16,
+    fontSize: 18,
     color: '#6b7280',
   },
   logoutButton: {
-    backgroundColor: '#ef4444',
-    margin: 16,
-    padding: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  logoutText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
+    marginHorizontal: 0,
+    marginBottom: 16,
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
   },
   bottomSpacing: {
     height: 100,
