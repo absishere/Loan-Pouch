@@ -1,93 +1,142 @@
-🧬 BioLend
-Empowering the Unbanked through Biometric Identity and Decentralized Trust.
+# 🧬 BioLend
 
-Built for Nakshatra: A Tech Hackathon | FinTech Track (Problem Statement 2)
+**Empowering the Unbanked through Biometric Identity and Decentralized Trust.**
 
-📖 Overview
-Over a billion people globally lack access to formal banking and credit scores, shutting them out of the global economy. BioLend is a decentralized, gamified micro-lending platform that replaces traditional banking bureaucracy with Biometric Identity, Social Collateral, and Smart Contract Escrows.
+Built for **Nakshatra: A Tech Hackathon** | FinTech Track (Problem Statement 2)
+
+---
+
+## 📖 Overview
+
+Over a billion people globally lack access to formal banking and credit scores, shutting them out of the global economy. **BioLend** is a decentralized, gamified micro-lending platform that replaces traditional banking bureaucracy with **Biometric Identity**, **Social Collateral**, and **Smart Contract Escrows**.
 
 By utilizing zero-knowledge KYC and on-chain trust scoring, BioLend allows individuals without traditional assets to secure loans safely, transparently, and without centralized control.
 
-✨ Key Features & Innovations
-🔒 Zero-Knowledge Biometric KYC: OCR extracts details from Aadhar/PAN, and OpenCV matches the user's live face to the document. Data is encrypted, uploaded to IPFS, and only the hash is stored on-chain. Zero sensitive data is stored on our servers.
+---
 
-🤝 Social Collateral (Guardians): Borrowers without physical assets leverage community trust. A loan request requires 2-of-3 trusted "Guardians" to digitally co-sign via Firebase notifications, putting their own reputation on the line.
+## ✨ Key Features & Innovations
 
-🎮 Gamified Trust Score: Repaying a loan on time adds +1 to the user's on-chain Trust Score (decreasing future interest by 0.2%). Defaulting yields a -1 penalty (increasing interest by 0.5%).
+- 🔒 **Zero-Knowledge Biometric KYC**: OCR extracts details from Aadhar/PAN, and face recognition matches the user's live face to the document. Data is encrypted, uploaded to IPFS, and only the hash is stored on-chain. Zero sensitive data is stored on our servers.
+- 🤝 **Social Collateral (Guardians)**: Borrowers without physical assets leverage community trust. A loan request requires 2-of-3 trusted "Guardians" to digitally co-sign via Firebase notifications, putting their own reputation on the line.
+- 🎮 **Gamified Trust Score**: Repaying a loan on time adds +1 to the user's on-chain Trust Score (decreasing future interest by 0.2%). Defaulting yields a -1 penalty (increasing interest by 0.5%).
+- 🧠 **AI Default Predictor**: A heuristic AI model analyzes biometric consistency, trust scores, and guardian networks to give lenders a clear "Risk Probability" before they fund a loan.
+- 🛡️ **Advanced Duress Security**:
+  - **Panic Mode**: If forced to transact under threat, using an alternate finger triggers a fake success UI while silently routing funds to a decoy wallet.
+  - **SMS Emergency Lock**: Texting "LOCK WALLET" flips a smart contract boolean, freezing all account outflows instantly.
 
-🧠 AI Default Predictor: A heuristic AI model analyzes biometric consistency, trust scores, and guardian networks to give lenders a clear "Risk Probability" (e.g., 🟢 Low Risk - 12%) before they fund a loan.
+---
 
-🛡️ Advanced Duress Security: \* Panic Mode: If forced to transact under threat, using an alternate finger triggers a fake success UI while silently routing funds to a decoy wallet.
+## 💻 Tech Stack
 
-SMS Emergency Lock: Texting "LOCK WALLET" flips a smart contract boolean, freezing all account outflows instantly.
+### Frontend (Web App)
+| Technology | Purpose |
+|---|---|
+| React + Vite (TypeScript) | UI Framework |
+| TailwindCSS v4 | Styling |
+| face-api.js | Client-side Face Detection & Matching |
+| Google Gemini API | OCR Text Extraction from ID Documents |
+| Lucide React | Icons |
 
-💻 Tech Stack
-Frontend (Mobile App)
-Framework: React Native (Expo Go)
+### Backend & AI
+| Technology | Purpose |
+|---|---|
+| Python + FastAPI | Backend Framework |
+| Scikit-learn | Heuristic Default Predictor |
+| Firebase Auth | SMS OTP Verification |
+| Firebase Cloud Messaging | Push Notifications |
 
-Biometrics: expo-local-authentication
+### Blockchain & Storage
+| Technology | Purpose |
+|---|---|
+| Ethereum Sepolia Testnet (Hardhat) | Smart Contract Network |
+| Solidity | Smart Contracts |
+| IPFS (Pinata) | Off-Chain Encrypted KYC Storage |
 
-Styling: NativeWind / StyleSheet
+---
 
-Web3: ethers.js
+## 🚀 Getting Started
 
-Backend & AI
-Framework: Python + FastAPI
+### Prerequisites
+- Node.js (v18+)
+- Python (v3.9+)
+- A Google Gemini API Key ([Get one from Google AI Studio](https://aistudio.google.com/))
 
-Identity AI: OpenCV (Live Face Match), Tesseract/EasyOCR (Document Extraction)
+### 1. Clone the Repository
+```bash
+git clone https://github.com/absishere/Loan-Pouch.git
+cd Loan-Pouch
+```
 
-Risk AI: Scikit-learn (Heuristic Default Predictor)
+### 2. Download Face Recognition Models
+```bash
+python download_models.py
+```
+This downloads the `face-api.js` model weights into `frontend/public/models/`.
 
-Services: Firebase Auth (SMS OTP) & Firebase Cloud Messaging (Push Notifications)
+### 3. Install Frontend Dependencies
+```bash
+cd frontend
+npm install
+```
 
-Blockchain & Storage
-Network: Ethereum Sepolia Testnet (Local testing via Hardhat)
+### 4. Configure Environment Variables
+Create a `.env` file inside the `frontend/` directory:
+```env
+VITE_GEMINI_API_KEY="your-gemini-api-key-here"
+```
 
-Smart Contracts: Solidity
+### 5. Run the Development Server
+```bash
+npm run dev
+```
+Open [http://localhost:5173](http://localhost:5173) in your browser.
 
-Off-Chain Storage: IPFS (via Pinata) for encrypted KYC data
+---
 
-🔄 User Flow
+## 🔄 E-KYC Verification Flow
 
-1. Onboarding & KYC
-   User uploads Aadhar & PAN -> FastAPI extracts details via OCR.
+1. **Document Upload** — User uploads Aadhar or PAN card image.
+2. **OCR Extraction** — AI extracts Name, DOB, Document Number from the uploaded ID. User can edit if any errors exist.
+3. **Face Verification** — Live webcam captures the user's face and compares it against the face on the ID document using `face-api.js` (runs entirely client-side).
+4. **Result** — If the faces match, the user is verified and can proceed to the dashboard.
 
-User verifies phone number via Firebase SMS OTP.
+---
 
-User takes a live selfie -> FastAPI runs an OpenCV liveness/face match.
+## 🏛️ System Architecture
 
-Data is encrypted and sent to IPFS. IPFS hash and isVerified boolean are stored on the Blockchain.
+- **Zone 1: Browser (Client-Side)** — Handles raw biometric data (face detection & matching via face-api.js). Images never leave the browser for facial recognition.
+- **Zone 2: FastAPI Backend** — Stateless relay handling heavy compute (AI Risk Prediction) and throwing away sensitive data immediately after IPFS encryption.
+- **Zone 3: Smart Contracts** — Decentralized, trustless bank holding funds in escrow and executing gamified interest rate logic immutably.
 
-User registers local device biometrics (Fingerprint/Face) and sets a transaction PIN (tPIN).
+---
 
-2. Borrowing Flow
-   Borrower requests a loan (Amount, Duration, Purpose). Note: Max 2 active loans allowed.
+## 🌍 Real-World Feasibility (The RBI CBDC Roadmap)
 
-FastAPI calculates the AI Default Predictor score.
-
-Request is pushed to the Marketplace. Note: Requests expire if unfunded within 3 days.
-
-User's 3 Guardians receive a push notification to co-sign the request.
-
-3. Lending & Escrow Flow
-   Lender browses the Marketplace, viewing Borrower Trust Scores and AI Risk metrics.
-
-Lender clicks "Fund", authenticating via Biometrics + tPIN.
-
-Funds (B-INR token) move from the Lender to the LoanEscrow.sol Smart Contract.
-
-Once 2-of-3 Guardians approve, the Smart Contract instantly releases funds to the Borrower.
-
-Repayments are sent back to the Smart Contract, which routes principal + interest back to the Lender and updates the gamified Trust Score.
-
-🏛️ System Architecture
-Zone 1: Mobile TEE (Trusted Execution Environment) handles raw biometric data. Biometric hashes never leave the device.
-
-Zone 2: FastAPI Backend acts as a stateless relay, handling heavy compute (OCR/OpenCV/AI) and throwing away sensitive images immediately after IPFS encryption.
-
-Zone 3: Smart Contracts act as the decentralized, trustless bank, holding funds in escrow and executing the gamified interest rate logic immutably.
-
-🌍 Real-World Feasibility (The RBI CBDC Roadmap)
-While this hackathon prototype utilizes B-INR (a custom ERC-20 stablecoin) to demonstrate smart contract logic, the real-world production architecture is designed specifically for the Reserve Bank of India's Digital Rupee (e₹).
+While this hackathon prototype utilizes **B-INR** (a custom ERC-20 stablecoin) to demonstrate smart contract logic, the real-world production architecture is designed specifically for the **Reserve Bank of India's Digital Rupee (e₹)**.
 
 By integrating with the APIs of the 19 current CBDC pilot banks (SBI, HDFC, ICICI, etc.), BioLend will act as the decentralized trust and escrow layer sitting directly on top of India's compliant, government-backed digital fiat infrastructure.
+
+---
+
+## 📁 Project Structure
+
+```
+Loan-Pouch/
+├── download_models.py          # Script to download face-api.js model weights
+├── frontend/
+│   ├── public/
+│   │   └── models/             # face-api.js weights (gitignored)
+│   ├── src/
+│   │   ├── components/
+│   │   │   └── KYCVerification.tsx   # Main E-KYC wizard component
+│   │   ├── services/
+│   │   │   ├── FaceService.ts        # face-api.js model loading & matching
+│   │   │   └── GeminiService.ts      # Gemini API OCR integration
+│   │   ├── App.tsx
+│   │   └── index.css
+│   ├── .env                    # API keys (gitignored)
+│   ├── package.json
+│   └── vite.config.ts
+├── RawFlow.md                  # Original project brainstorm
+└── README.md
+```
