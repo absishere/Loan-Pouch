@@ -1,214 +1,122 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import { useNavigation } from '@react-navigation/native';
+import ClayCard from '../components/ClayCard';
+import ClayButton from '../components/ClayButton';
+import { api, LoanData } from '../services/api';
 
 export default function DashboardScreen() {
+  const navigation = useNavigation();
+  const [loans, setLoans] = useState<LoanData[]>([]);
+
+  useEffect(() => {
+    api.listLoans().then(setLoans).catch(console.error);
+  }, []);
+
   return (
-    <ScrollView style={styles.container}>
+    <View style={styles.container}>
       <StatusBar style="dark" />
       
       {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.greeting}>Welcome back, Rahul!</Text>
-        <View style={styles.trustScoreBadge}>
-          <Text style={styles.trustScoreText}>Trust Score: 650</Text>
+      <ClayCard style={styles.header}>
+        <View style={styles.headerContent}>
+          <View>
+            <Text style={styles.greeting}>Dashboard</Text>
+            <Text style={styles.subGreeting}>Welcome to Loan Pouch!</Text>
+          </View>
+          <View style={styles.trustBadge}>
+            <Text style={styles.trustText}>450</Text>
+            <Text style={styles.trustLabel}>New User</Text>
+          </View>
         </View>
-      </View>
+      </ClayCard>
 
-      {/* Stats Cards */}
-      <View style={styles.statsGrid}>
-        <View style={styles.statCard}>
-          <Text style={styles.statLabel}>B-INR Balance</Text>
-          <Text style={styles.statValue}>₹15,240</Text>
-          <Text style={styles.statSubtext}>≈ $183 USD</Text>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        {/* Stats Grid */}
+        <View style={styles.statsGrid}>
+          <ClayCard style={styles.statCard}>
+            <Text style={styles.statLabel}>Demo Balance</Text>
+            <Text style={styles.statValue}>₹50,000</Text>
+          </ClayCard>
+          
+          <ClayCard style={styles.statCard}>
+            <Text style={styles.statLabel}>Global Requests</Text>
+            <Text style={styles.statValue}>{loans.length}</Text>
+          </ClayCard>
+          
+          <ClayCard style={styles.statCard}>
+            <Text style={styles.statLabel}>Interest Rate</Text>
+            <Text style={styles.statValue}>5.0%</Text>
+          </ClayCard>
+          
+          <ClayCard style={styles.statCard}>
+            <Text style={styles.statLabel}>Transactions</Text>
+            <Text style={styles.statValue}>0</Text>
+          </ClayCard>
         </View>
-        
-        <View style={styles.statCard}>
-          <Text style={styles.statLabel}>Active Loans</Text>
-          <Text style={styles.statValue}>2</Text>
-          <Text style={styles.statSubtext}>1 borrowed, 1 lent</Text>
-        </View>
-        
-        <View style={styles.statCard}>
-          <Text style={styles.statLabel}>Interest Rate</Text>
-          <Text style={styles.statValue}>5.2%</Text>
-          <Text style={styles.statSubtext}>Based on Trust Score</Text>
-        </View>
-        
-        <View style={styles.statCard}>
-          <Text style={styles.statLabel}>Transactions</Text>
-          <Text style={styles.statValue}>24</Text>
-          <Text style={styles.statSubtext}>All time</Text>
-        </View>
-      </View>
 
-      {/* Quick Actions */}
-      <View style={styles.quickActions}>
-        <TouchableOpacity style={[styles.actionButton, styles.borrowButton]}>
-          <Text style={styles.actionButtonText}>🏦 Borrow Money</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity style={[styles.actionButton, styles.lendButton]}>
-          <Text style={styles.actionButtonText}>💰 Lend Money</Text>
-        </TouchableOpacity>
-      </View>
+        {/* Quick Actions */}
+        <View style={styles.actionsSection}>
+          <ClayButton 
+            title="💰 Request Loan"
+            variant="primary"
+            style={styles.actionButton}
+            onPress={() => navigation.navigate('Borrow' as never)}
+          />
+          <ClayButton 
+            title="💳 Browse Loans"
+            variant="secondary"
+            style={styles.actionButton}
+            onPress={() => navigation.navigate('Lend' as never)}
+          />
+        </View>
 
-      {/* Recent Activity */}
-      <View style={styles.activitySection}>
-        <Text style={styles.sectionTitle}>Recent Activity</Text>
-        
-        <View style={styles.activityItem}>
-          <View style={styles.activityIcon}>
-            <Text>↑</Text>
-          </View>
-          <View style={styles.activityDetails}>
-            <Text style={styles.activityTitle}>Lent to Priya Sharma</Text>
-            <Text style={styles.activitySubtitle}>2 hours ago</Text>
-          </View>
-          <Text style={styles.activityAmount}>-₹5,000</Text>
+        {/* Navigation Cards */}
+        <View style={styles.navGrid}>
+          <TouchableOpacity style={styles.navCard} onPress={() => navigation.navigate('Analytics' as never)}>
+            <ClayCard style={styles.navCardInner}>
+              <Text style={styles.navIcon}>📈</Text>
+              <Text style={styles.navTitle}>Analytics</Text>
+              <Text style={styles.navDesc}>Trust Score (WIP)</Text>
+            </ClayCard>
+          </TouchableOpacity>
+          
+          <TouchableOpacity style={styles.navCard} onPress={() => navigation.navigate('History' as never)}>
+            <ClayCard style={styles.navCardInner}>
+              <Text style={styles.navIcon}>📋</Text>
+              <Text style={styles.navTitle}>History</Text>
+              <Text style={styles.navDesc}>Tx Records (WIP)</Text>
+            </ClayCard>
+          </TouchableOpacity>
         </View>
-        
-        <View style={styles.activityItem}>
-          <View style={styles.activityIcon}>
-            <Text>↓</Text>
-          </View>
-          <View style={styles.activityDetails}>
-            <Text style={styles.activityTitle}>Received from Amit Kumar</Text>
-            <Text style={styles.activitySubtitle}>1 day ago</Text>
-          </View>
-          <Text style={styles.activityAmount}>+₹3,200</Text>
-        </View>
-      </View>
-    </ScrollView>
+
+        <View style={styles.bottomSpacing} />
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f3f4f6',
-  },
-  header: {
-    padding: 20,
-    paddingTop: 50,
-    backgroundColor: 'white',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
-  },
-  greeting: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#1f2937',
-  },
-  trustScoreBadge: {
-    backgroundColor: '#10b981',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-  },
-  trustScoreText: {
-    color: 'white',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    padding: 16,
-    gap: 12,
-  },
-  statCard: {
-    backgroundColor: 'white',
-    padding: 16,
-    borderRadius: 12,
-    flex: 1,
-    minWidth: '45%',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  statLabel: {
-    fontSize: 12,
-    color: '#6b7280',
-    marginBottom: 4,
-  },
-  statValue: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1f2937',
-  },
-  statSubtext: {
-    fontSize: 10,
-    color: '#9ca3af',
-    marginTop: 2,
-  },
-  quickActions: {
-    flexDirection: 'row',
-    padding: 16,
-    gap: 12,
-  },
-  actionButton: {
-    flex: 1,
-    padding: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  borrowButton: {
-    backgroundColor: '#3b82f6',
-  },
-  lendButton: {
-    backgroundColor: '#10b981',
-  },
-  actionButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  activitySection: {
-    padding: 16,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#1f2937',
-    marginBottom: 12,
-  },
-  activityItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'white',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 8,
-  },
-  activityIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#f3f4f6',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  activityDetails: {
-    flex: 1,
-  },
-  activityTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#1f2937',
-  },
-  activitySubtitle: {
-    fontSize: 12,
-    color: '#6b7280',
-  },
-  activityAmount: {
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
+  container: { flex: 1, backgroundColor: '#e5e7eb', paddingHorizontal: 16, paddingTop: 50 },
+  header: { marginBottom: 16, paddingVertical: 16 },
+  headerContent: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  greeting: { fontSize: 24, fontWeight: 'bold', color: '#1f2937' },
+  subGreeting: { fontSize: 14, color: '#6b7280', marginTop: 2 },
+  trustBadge: { alignItems: 'center', backgroundColor: 'rgba(16, 185, 129, 0.1)', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 12 },
+  trustText: { fontSize: 18, fontWeight: 'bold', color: '#10b981' },
+  trustLabel: { fontSize: 10, color: '#6b7280' },
+  statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 24 },
+  statCard: { flex: 1, minWidth: '45%', padding: 16 },
+  statLabel: { fontSize: 12, color: '#6b7280', marginBottom: 8 },
+  statValue: { fontSize: 24, fontWeight: 'bold', color: '#1f2937' },
+  actionsSection: { flexDirection: 'row', gap: 12, marginBottom: 24 },
+  actionButton: { flex: 1 },
+  navGrid: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 24 },
+  navCard: { width: '48%' },
+  navCardInner: { padding: 20, alignItems: 'center' },
+  navIcon: { fontSize: 32, marginBottom: 8 },
+  navTitle: { fontSize: 16, fontWeight: 'bold', color: '#1f2937', marginBottom: 4 },
+  navDesc: { fontSize: 12, color: '#6b7280', textAlign: 'center' },
+  bottomSpacing: { height: 100 },
 });

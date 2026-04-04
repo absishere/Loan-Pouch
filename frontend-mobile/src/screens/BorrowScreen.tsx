@@ -1,18 +1,14 @@
 import React, { useState } from 'react';
-import {
-  View, Text, StyleSheet, TextInput, TouchableOpacity,
-  ScrollView, Alert, ActivityIndicator,
-} from 'react-native';
+import { View, Text, StyleSheet, TextInput, ScrollView, SafeAreaView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import ClayCard from '../components/ClayCard';
+import ClayButton from '../components/ClayButton';
 import { api } from '../services/api';
-
-const DURATIONS = [7, 15, 30];
-const PURPOSES = ['🏥 Medical', '📚 Education', '🚨 Emergency', '💼 Personal'];
 
 export default function BorrowScreen() {
   const [amount, setAmount] = useState('5000');
-  const [duration, setDuration] = useState(7);
-  const [purpose, setPurpose] = useState(PURPOSES[0]);
+  const [duration, setDuration] = useState('7');
+  const [purpose, setPurpose] = useState('personal');
   const [borrowerAddress, setBorrowerAddress] = useState('');
   const [guardian1, setGuardian1] = useState('');
   const [guardian2, setGuardian2] = useState('');
@@ -20,14 +16,31 @@ export default function BorrowScreen() {
   const [loading, setLoading] = useState(false);
   const [riskInfo, setRiskInfo] = useState<{ risk_label: string; risk_probability: number } | null>(null);
 
+  const durationOptions = [
+    { value: '7', label: '7 days' },
+    { value: '15', label: '15 days' },
+    { value: '30', label: '30 days' },
+  ];
+
+  const purposeOptions = [
+    { value: 'medical', label: '🏥 Medical', icon: '🏥' },
+    { value: 'education', label: '📚 Education', icon: '📚' },
+    { value: 'emergency', label: '🚨 Emergency', icon: '🚨' },
+    { value: 'personal', label: '💼 Personal', icon: '💼' },
+  ];
+
   const amountWei = Math.floor(Number(amount) * 1e18);
-  const interestRate = 0.05;
-  const interestWei = Math.floor(amountWei * interestRate * (duration / 365));
+  const interestRate = 0.05; // 5% APR
+  const interestWei = Math.floor(amountWei * interestRate * (Number(duration) / 365));
   const totalRepayment = Number(amount) + interestWei / 1e18;
 
   const checkRisk = async () => {
+    if (Number(amount) <= 0) {
+      Alert.alert('Invalid Amount', 'Please enter a valid amount.');
+      return;
+    }
     try {
-      const res = await api.getRiskScore(450, Number(amount), duration);
+      const res = await api.getRiskScore(450, Number(amount), Number(duration));
       setRiskInfo(res);
     } catch {
       Alert.alert('Error', 'Could not fetch AI risk score. Is backend running?');
@@ -50,7 +63,7 @@ export default function BorrowScreen() {
         amount: amountWei,
         interest_amount: interestWei,
         guardians: [guardian1, guardian2, guardian3],
-        funding_deadline_days: duration,
+        funding_deadline_days: Number(duration),
       });
       Alert.alert('✅ Loan Requested!', `Transaction: ${res.tx_hash}`);
     } catch (e: any) {
@@ -60,176 +73,163 @@ export default function BorrowScreen() {
     }
   };
 
-  const riskColor = (label?: string) =>
-    label === 'Low' ? '#16a34a' : label === 'Medium' ? '#ca8a04' : '#dc2626';
-
   return (
-    <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
+    <SafeAreaView style={styles.container}>
       <StatusBar style="dark" />
-
+      
       <View style={styles.header}>
-        <Text style={styles.title}>💰 Request a Loan</Text>
-        <Text style={styles.subtitle}>Secured by blockchain · B-INR powered</Text>
+        <Text style={styles.headerTitle}>Request Loan</Text>
+        <Text style={styles.headerSubtitle}>Secured by blockchain · B-INR powered</Text>
       </View>
 
-      {/* Wallet Address */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Your Wallet Address</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="0x..."
-          value={borrowerAddress}
-          onChangeText={setBorrowerAddress}
-          autoCapitalize="none"
-        />
-      </View>
-
-      {/* Amount */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Loan Amount (₹)</Text>
-        <View style={styles.amountContainer}>
-          <Text style={styles.currency}>₹</Text>
+      <ScrollView showsVerticalScrollIndicator={false} style={styles.content} keyboardShouldPersistTaps="handled">
+        
+        {/* Wallet Address */}
+        <ClayCard style={styles.sectionCard}>
+          <Text style={styles.sectionTitle}>Your Wallet Address</Text>
           <TextInput
-            style={styles.amountInput}
-            placeholder="5,000"
-            keyboardType="numeric"
-            value={amount}
-            onChangeText={setAmount}
-          />
-        </View>
-        <Text style={styles.helper}>Enter any amount · Milestone mode auto-activates above ₹10,00,000</Text>
-      </View>
-
-      {/* Duration */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Repayment Period</Text>
-        <View style={styles.durationButtons}>
-          {DURATIONS.map((d) => (
-            <TouchableOpacity
-              key={d}
-              style={[styles.durationBtn, duration === d && styles.activeDuration]}
-              onPress={() => setDuration(d)}
-            >
-              <Text style={[styles.durationText, duration === d && styles.activeDurationText]}>
-                {d} days
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
-
-      {/* Purpose */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Purpose</Text>
-        <View style={styles.purposeButtons}>
-          {PURPOSES.map((p) => (
-            <TouchableOpacity
-              key={p}
-              style={[styles.purposeBtn, purpose === p && styles.activePurpose]}
-              onPress={() => setPurpose(p)}
-            >
-              <Text style={[styles.purposeText, purpose === p && styles.activePurposeText]}>{p}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
-
-      {/* Guardians */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Guardian Wallets (3 required)</Text>
-        <Text style={styles.helper}>Guardians with Trust Score ≥ 50 carry 2× voting weight</Text>
-        {[guardian1, guardian2, guardian3].map((g, i) => (
-          <TextInput
-            key={i}
-            style={[styles.input, { marginTop: i === 0 ? 8 : 4 }]}
-            placeholder={`Guardian ${i + 1} address (0x...)`}
-            value={g}
-            onChangeText={[setGuardian1, setGuardian2, setGuardian3][i]}
+            style={styles.inputBox}
+            placeholder="0x..."
+            value={borrowerAddress}
+            onChangeText={setBorrowerAddress}
             autoCapitalize="none"
           />
-        ))}
-      </View>
+        </ClayCard>
 
-      {/* Preview */}
-      <View style={styles.previewCard}>
-        <Text style={styles.previewTitle}>Loan Summary</Text>
-        <View style={styles.rateRow}>
-          <Text style={styles.rateLabel}>Amount</Text>
-          <Text style={styles.rateValue}>₹{Number(amount).toLocaleString('en-IN')}</Text>
-        </View>
-        <View style={styles.rateRow}>
-          <Text style={styles.rateLabel}>Interest (5% APR)</Text>
-          <Text style={styles.rateValue}>₹{(interestWei / 1e18).toFixed(2)}</Text>
-        </View>
-        <View style={styles.rateRow}>
-          <Text style={styles.rateLabel}>Total Repayment</Text>
-          <Text style={[styles.rateValue, { color: '#1f2937' }]}>₹{totalRepayment.toFixed(2)}</Text>
-        </View>
-        {Number(amount) >= 1000000 && (
-          <View style={styles.milestoneTag}>
-            <Text style={styles.milestoneText}>🏁 Milestone Mode — funds released in 4 tranches of 25%</Text>
+        {/* Loan Amount */}
+        <ClayCard style={styles.sectionCard}>
+          <Text style={styles.sectionTitle}>Loan Amount</Text>
+          <View style={styles.amountContainer}>
+            <Text style={styles.currency}>₹</Text>
+            <TextInput 
+              style={styles.amountInput}
+              placeholder="5000"
+              value={amount}
+              onChangeText={setAmount}
+              keyboardType="numeric"
+              placeholderTextColor="#9ca3af"
+            />
           </View>
-        )}
-        {riskInfo && (
-          <View style={[styles.riskTag, { borderColor: riskColor(riskInfo.risk_label) }]}>
-            <Text style={[styles.riskText, { color: riskColor(riskInfo.risk_label) }]}>
-              AI Risk: {riskInfo.risk_label} ({(riskInfo.risk_probability * 100).toFixed(0)}%)
-            </Text>
+          <Text style={styles.helperText}>Range: Any amount · Milestone mode activates above ₹10,00,000</Text>
+        </ClayCard>
+
+        {/* Duration */}
+        <ClayCard style={styles.sectionCard}>
+          <Text style={styles.sectionTitle}>Repayment Duration</Text>
+          <View style={styles.optionsGrid}>
+            {durationOptions.map((option) => (
+              <ClayButton
+                key={option.value}
+                title={option.label}
+                variant={duration === option.value ? 'primary' : 'secondary'}
+                onPress={() => setDuration(option.value)}
+                style={styles.optionButton}
+              />
+            ))}
           </View>
-        )}
-      </View>
+        </ClayCard>
 
-      <TouchableOpacity style={styles.riskButton} onPress={checkRisk}>
-        <Text style={styles.riskButtonText}>🤖 Check AI Risk Score</Text>
-      </TouchableOpacity>
+        {/* Purpose */}
+        <ClayCard style={styles.sectionCard}>
+          <Text style={styles.sectionTitle}>Purpose</Text>
+          <View style={styles.purposeGrid}>
+            {purposeOptions.map((option) => (
+              <TouchableOpacity
+                key={option.value}
+                style={[styles.purposeOption, purpose === option.value && styles.purposeOptionActive]}
+                onPress={() => setPurpose(option.value)}
+              >
+                <ClayCard style={styles.purposeCard}>
+                  <Text style={styles.purposeIcon}>{option.icon}</Text>
+                  <Text style={[styles.purposeText, purpose === option.value && styles.purposeTextActive]}>
+                    {option.label.replace(/🏥|📚|🚨|💼\s/, '')}
+                  </Text>
+                </ClayCard>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </ClayCard>
 
-      <TouchableOpacity style={styles.requestButton} onPress={handleSubmit} disabled={loading}>
+        {/* Guardians */}
+        <ClayCard style={styles.sectionCard}>
+          <Text style={styles.sectionTitle}>Guardian Wallets (3 required)</Text>
+          <Text style={styles.helperText}>Trust Score ≥ 50 carries 2× voting weight</Text>
+          <TextInput style={[styles.inputBox, { marginTop: 12 }]} placeholder="Guardian 1 (0x...)" value={guardian1} onChangeText={setGuardian1} autoCapitalize="none" />
+          <TextInput style={[styles.inputBox, { marginTop: 8 }]} placeholder="Guardian 2 (0x...)" value={guardian2} onChangeText={setGuardian2} autoCapitalize="none" />
+          <TextInput style={[styles.inputBox, { marginTop: 8 }]} placeholder="Guardian 3 (0x...)" value={guardian3} onChangeText={setGuardian3} autoCapitalize="none" />
+        </ClayCard>
+
+        {/* Interest Rate Preview */}
+        <ClayCard style={styles.previewCard}>
+          <Text style={styles.previewTitle}>💡 Rate Preview</Text>
+          <View style={styles.previewRow}>
+            <Text style={styles.previewLabel}>Trust Score</Text>
+            <Text style={styles.previewValue}>450</Text>
+          </View>
+          <View style={styles.previewRow}>
+            <Text style={styles.previewLabel}>Interest Rate</Text>
+            <Text style={styles.previewValue}>5.0% APR</Text>
+          </View>
+          <View style={styles.previewRow}>
+            <Text style={styles.previewLabel}>Total Repayment</Text>
+            <Text style={styles.previewValueHighlight}>₹{totalRepayment.toLocaleString('en-IN')}</Text>
+          </View>
+          {Number(amount) >= 1000000 && (
+            <View style={{ marginTop: 10, padding: 8, backgroundColor: '#f3e8ff', borderRadius: 8 }}>
+              <Text style={{ fontSize: 12, color: '#7c3aed', textAlign: 'center', fontWeight: 'bold' }}>🏁 Milestone Mode — 4 tranches of 25%</Text>
+            </View>
+          )}
+          {riskInfo && (
+            <View style={{ marginTop: 10, padding: 8, borderRadius: 8, borderWidth: 1, borderColor: riskInfo.risk_label === 'Low' ? '#16a34a' : riskInfo.risk_label === 'Medium' ? '#ca8a04' : '#dc2626' }}>
+              <Text style={{ textAlign: 'center', fontWeight: 'bold', color: riskInfo.risk_label === 'Low' ? '#16a34a' : riskInfo.risk_label === 'Medium' ? '#ca8a04' : '#dc2626' }}>
+                AI Risk: {riskInfo.risk_label} ({(riskInfo.risk_probability * 100).toFixed(0)}%)
+              </Text>
+            </View>
+          )}
+        </ClayCard>
+
+        <ClayButton title="🤖 Check AI Risk Score" variant="secondary" onPress={checkRisk} style={{ marginBottom: 12 }} />
+
         {loading ? (
-          <ActivityIndicator color="white" />
+          <ActivityIndicator color="#3b82f6" size="large" style={{ marginBottom: 16 }} />
         ) : (
-          <Text style={styles.requestButtonText}>📝 Submit Loan Request</Text>
+          <ClayButton title="📝 Submit Loan Request" variant="primary" onPress={handleSubmit} style={styles.submitButton} />
         )}
-      </TouchableOpacity>
 
-      <View style={styles.bottomSpacing} />
-    </ScrollView>
+        <View style={styles.bottomSpacing} />
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f3f4f6' },
-  header: { padding: 20, paddingTop: 50, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#e5e7eb' },
-  title: { fontSize: 24, fontWeight: 'bold', color: '#1f2937' },
-  subtitle: { fontSize: 13, color: '#6b7280', marginTop: 4 },
-  card: { backgroundColor: 'white', margin: 12, padding: 18, borderRadius: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 1 },
-  cardTitle: { fontSize: 15, fontWeight: 'bold', color: '#1f2937', marginBottom: 10 },
-  input: { borderWidth: 1, borderColor: '#d1d5db', borderRadius: 8, padding: 12, fontSize: 14, color: '#1f2937', backgroundColor: '#f9fafb' },
-  amountContainer: { flexDirection: 'row', alignItems: 'center', borderWidth: 2, borderColor: '#3b82f6', borderRadius: 8, padding: 12 },
-  currency: { fontSize: 24, fontWeight: 'bold', color: '#3b82f6', marginRight: 8 },
-  amountInput: { fontSize: 24, fontWeight: 'bold', flex: 1 },
-  helper: { fontSize: 11, color: '#9ca3af', marginTop: 6 },
-  durationButtons: { flexDirection: 'row', gap: 8 },
-  durationBtn: { flex: 1, padding: 12, borderRadius: 8, borderWidth: 1, borderColor: '#d1d5db', alignItems: 'center' },
-  activeDuration: { backgroundColor: '#3b82f6', borderColor: '#3b82f6' },
-  durationText: { fontSize: 14, fontWeight: '600', color: '#4b5563' },
-  activeDurationText: { color: 'white' },
-  purposeButtons: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  purposeBtn: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, backgroundColor: '#f3f4f6', borderWidth: 1, borderColor: '#d1d5db' },
-  activePurpose: { backgroundColor: '#3b82f6', borderColor: '#3b82f6' },
-  purposeText: { fontSize: 13, color: '#1f2937' },
-  activePurposeText: { color: 'white' },
-  previewCard: { backgroundColor: '#f0f9ff', margin: 12, padding: 18, borderRadius: 12, borderWidth: 1, borderColor: '#bfdbfe' },
-  previewTitle: { fontSize: 15, fontWeight: 'bold', color: '#1f2937', marginBottom: 12 },
-  rateRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
-  rateLabel: { fontSize: 14, color: '#6b7280' },
-  rateValue: { fontSize: 14, fontWeight: 'bold', color: '#3b82f6' },
-  milestoneTag: { backgroundColor: '#f3e8ff', borderRadius: 8, padding: 10, marginTop: 10 },
-  milestoneText: { fontSize: 12, color: '#7c3aed', fontWeight: '600' },
-  riskTag: { borderRadius: 8, borderWidth: 1.5, padding: 10, marginTop: 8 },
-  riskText: { fontSize: 13, fontWeight: '700', textAlign: 'center' },
-  riskButton: { backgroundColor: '#6366f1', marginHorizontal: 12, marginTop: 4, padding: 14, borderRadius: 12, alignItems: 'center' },
-  riskButtonText: { color: 'white', fontSize: 15, fontWeight: '600' },
-  requestButton: { backgroundColor: '#3b82f6', margin: 12, marginTop: 8, padding: 16, borderRadius: 12, alignItems: 'center' },
-  requestButtonText: { color: 'white', fontSize: 17, fontWeight: 'bold' },
+  container: { flex: 1, backgroundColor: '#e5e7eb' },
+  header: { backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#e5e7eb', paddingHorizontal: 24, paddingVertical: 16, paddingTop: 60 },
+  headerTitle: { fontSize: 24, fontWeight: 'bold', color: '#1f2937', marginBottom: 4 },
+  headerSubtitle: { fontSize: 14, color: '#6b7280' },
+  content: { flex: 1, padding: 16 },
+  sectionCard: { padding: 24, marginBottom: 16 },
+  sectionTitle: { fontSize: 18, fontWeight: 'bold', color: '#1f2937', marginBottom: 16 },
+  inputBox: { backgroundColor: 'rgba(255, 255, 255, 0.8)', borderWidth: 1, borderColor: '#d1d5db', borderRadius: 8, padding: 12, fontSize: 14, color: '#1f2937' },
+  amountContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255, 255, 255, 0.8)', borderRadius: 12, padding: 16, marginBottom: 8, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 2 },
+  currency: { fontSize: 24, fontWeight: 'bold', color: '#1f2937', marginRight: 8 },
+  amountInput: { fontSize: 24, fontWeight: 'bold', color: '#1f2937', flex: 1 },
+  helperText: { fontSize: 12, color: '#6b7280', textAlign: 'center' },
+  optionsGrid: { flexDirection: 'row', gap: 8 },
+  optionButton: { flex: 1 },
+  purposeGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
+  purposeOption: { width: '48%', marginBottom: 12 },
+  purposeOptionActive: { transform: [{ scale: 1.02 }] },
+  purposeCard: { padding: 16, alignItems: 'center', backgroundColor: 'rgba(255, 255, 255, 0.6)' },
+  purposeIcon: { fontSize: 24, marginBottom: 8 },
+  purposeText: { fontSize: 14, fontWeight: '600', color: '#6b7280' },
+  purposeTextActive: { color: '#1f2937' },
+  previewCard: { padding: 24, marginBottom: 24, backgroundColor: 'rgba(255, 255, 255, 0.8)' },
+  previewTitle: { fontSize: 18, fontWeight: 'bold', color: '#1f2937', marginBottom: 16 },
+  previewRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' },
+  previewLabel: { fontSize: 14, color: '#6b7280' },
+  previewValue: { fontSize: 14, fontWeight: '600', color: '#1f2937' },
+  previewValueHighlight: { fontSize: 16, fontWeight: 'bold', color: '#000000' },
+  submitButton: { marginHorizontal: 0, marginBottom: 16 },
   bottomSpacing: { height: 100 },
 });
