@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract B_INR is ERC20, Ownable {
-    constructor() ERC20("BioLend INR", "BINR") Ownable(msg.sender) {
+    constructor() ERC20("LoanPouch INR", "BINR") Ownable(msg.sender) {
         // Mint initial supply of 100,000 BINR to deployer for liquidity provision testing
         _mint(msg.sender, 100000 * 10 ** decimals());
     }

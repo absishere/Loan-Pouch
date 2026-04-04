@@ -9,11 +9,11 @@ async function main() {
   const binrAddress = await binrToken.getAddress();
   console.log(`✅ B_INR Token deployed to: ${binrAddress}`);
 
-  // 2. Deploy the BioLend Escrow Contract, passing the token address
-  const bioLendEscrow = await hardhat.ethers.deployContract("BioLendEscrow", [binrAddress]);
-  await bioLendEscrow.waitForDeployment();
-  const escrowAddress = await bioLendEscrow.getAddress();
-  console.log(`✅ BioLend Escrow deployed to: ${escrowAddress}`);
+  // 2. Deploy the LoanPouch Escrow Contract, passing the token address
+  const loanPouchEscrow = await hardhat.ethers.deployContract("LoanPouchEscrow", [binrAddress]);
+  await loanPouchEscrow.waitForDeployment();
+  const escrowAddress = await loanPouchEscrow.getAddress();
+  console.log(`✅ LoanPouch Escrow deployed to: ${escrowAddress}`);
 
   console.log("\n--- Deployment Completed ---");
   console.log(`Next Step: Save these addresses in your frontend/backend .env file!`);

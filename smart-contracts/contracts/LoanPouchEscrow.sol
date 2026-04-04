@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
-contract BioLendEscrow is Ownable, ReentrancyGuard {
+contract LoanPouchEscrow is Ownable, ReentrancyGuard {
     IERC20 public binrToken;
 
     struct Loan {
@@ -42,7 +42,7 @@ contract BioLendEscrow is Ownable, ReentrancyGuard {
     event WalletLockToggled(address indexed user, bool isLocked);
 
     modifier notLocked(address user) {
-        require(!isLocked[user], "BioLend: Wallet is locked via SMS emergency mode");
+        require(!isLocked[user], "LoanPouch: Wallet is locked via SMS emergency mode");
         _;
     }
 
@@ -56,7 +56,7 @@ contract BioLendEscrow is Ownable, ReentrancyGuard {
      */
     function setWalletLock(address user, bool status) external {
         // For hackathon: Either user self-locks, or owner (backend relay) locks it.
-        require(msg.sender == user || msg.sender == owner(), "BioLend: Not authorized");
+        require(msg.sender == user || msg.sender == owner(), "LoanPouch: Not authorized");
         isLocked[user] = status;
         emit WalletLockToggled(user, status);
     }
@@ -107,7 +107,7 @@ contract BioLendEscrow is Ownable, ReentrancyGuard {
      */
     function approveByGuardian(uint256 loanId) external nonReentrant notLocked(msg.sender) {
         Loan storage loan = loans[loanId];
-        require(!isLocked[loan.borrower], "BioLend: Borrower wallet is locked");
+        require(!isLocked[loan.borrower], "LoanPouch: Borrower wallet is locked");
         require(loan.isFunded, "Loan must be funded first");
         require(!loan.isDisbursed, "Loan already disbursed");
         require(!hasGuardianApproved[loanId][msg.sender], "Already approved");
