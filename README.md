@@ -1,97 +1,275 @@
-🧬 Loan Pouch
-Empowering the Unbanked through Biometric Identity and Decentralized Trust.
+# 🧬 Loan Pouch
+**Empowering the Unbanked through Biometric Identity and Decentralized Trust.**
 
-Built for Nakshatra: A Tech Hackathon | FinTech Track (Problem Statement 2)
+> Built for **Nakshatra: A Tech Hackathon** | FinTech Track (Problem Statement 2)
 
-📖 Overview
-Over a billion people globally lack access to formal banking and credit scores, shutting them out of the global economy. Loan Pouch is a decentralized, gamified micro-lending platform that replaces traditional banking bureaucracy with Biometric Identity, Social Collateral, and Smart Contract Escrows.
+---
 
-By utilizing zero-knowledge KYC and on-chain trust scoring, Loan Pouch allows individuals without traditional assets to secure loans safely, transparently, and without centralized control.
+## 📖 Overview
 
-✨ Key Features & Innovations
-🔒 Zero-Knowledge Biometric KYC: OCR extracts details from Aadhar/PAN, and OpenCV matches the user's live face to the document. Data is encrypted, uploaded to IPFS, and only the hash is stored on-chain. Zero sensitive data is stored on our servers.
+Over a billion people globally lack access to formal banking and credit scores. **Loan Pouch** is a decentralized, gamified micro-lending platform that replaces traditional banking bureaucracy with Biometric Identity, Social Collateral, and Smart Contract Escrows.
 
-🤝 Social Collateral (Guardians): Borrowers without physical assets leverage community trust. A loan request requires 2-of-3 trusted "Guardians" to digitally co-sign via Firebase notifications, putting their own reputation on the line.
+Using zero-knowledge KYC, on-chain trust scoring, and Algorithmic Guardian Weighting, Loan Pouch allows individuals without traditional assets to secure loans safely, transparently, and without centralized control.
 
-🛡️ Guardian Identity Recovery: In a truly decentralized system without central 'auth', if a user loses their biometric device keys, their 2-of-3 Guardians can seamlessly migrate their Trust Score, Escrow identity, and limits to a newly restored wallet while structurally bricking the compromised one.
+---
 
-👥 Shared Group Lending: If a requested loan amount is too large for a single individual to finance comfortably, multiple lenders can co-fund the same borrower on-chain. Repayments (Principal + Interest) are trustlessly distributed pro-rata back to each contributor in a single transaction.
+## ✨ Advanced Features
 
-🎮 Gamified Trust Score: Repaying a loan on time adds +1 to the user's on-chain Trust Score. Defaulting yields a -1 penalty.
+| Feature | Description |
+|---|---|
+| 🔒 **ZK-SNARK Identity** | High-value loans (>₹10,00,000) require ZK-proof of citizenship and age-18+ verification |
+| 🤝 **Algorithmic Guardian Weighting** | Guardian approvals are weighted by on-chain Trust Score (≥50 = 2× vote) |
+| 🏁 **Milestone Disbursements** | Large loans are released in 4 × 25% tranches, preventing rug-pulls |
+| 👥 **Group Lending** | Multiple lenders can co-fund a single borrower; repayments auto-distributed pro-rata |
+| 🔑 **Identity Recovery** | 2-of-3 Guardian-approved wallet migration with bricking of the compromised wallet |
+| 🛡️ **Panic Mode / SMS Lock** | Duress mode routes to decoy vault; text "LOCK WALLET" to freeze account instantly |
+| 🎮 **Gamified Trust Score** | On-chain Trust Score updated on every repayment/default (+1 / -1) |
+| 🤖 **AI Risk Predictor** | Heuristic AI calculates risk probability before a loan is funded |
 
-🧠 AI Default Predictor: A heuristic AI model analyzes biometric consistency, trust scores, and guardian networks to give lenders a clear "Risk Probability" (e.g., 🟢 Low Risk - 12%) before they fund a loan.
+---
 
-🛡️ Advanced Duress Security: 
-* Panic Mode: If forced to transact under threat, using an alternate finger triggers a fake success UI while silently routing funds to a decoy vault.
-* SMS Emergency Lock: Texting "LOCK WALLET" to our webhook flips a smart contract boolean, instantly freezing all account outflows.
+## 🗂️ Mono-Repo Structure
 
-💻 Tech Stack
-Frontend (Mobile App)
-Framework: React Native (Expo Go)
+```
+Loan-Pouch/
+├── backend/                 # FastAPI Python backend
+│   └── app/
+│       ├── api/             # REST routes (loans, kyc, guardians)
+│       ├── services/        # web3_service, kyc_service
+│       └── models/          # Pydantic schemas
+├── smart-contracts/         # Hardhat + Solidity
+│   ├── contracts/
+│   │   ├── LoanPouchEscrow.sol   # Ultimate Advanced Escrow
+│   │   └── B_INR.sol             # B-INR stablecoin token
+│   └── scripts/
+│       └── clean_deploy.js
+├── frontend-web/            # Anchita's Next.js 14 web dashboard
+├── frontend-mobile/         # Expo React Native mobile app
+└── frontend-kyc/            # Rushikesh's Vite KYC face-match module
+```
 
-Biometrics: expo-local-authentication
+---
 
-Styling: NativeWind / StyleSheet
+## ⚙️ Prerequisites
 
-Web3: ethers.js
+Ensure the following are installed before proceeding:
 
-Backend & AI
-Framework: Python + FastAPI
+| Tool | Version | Install |
+|---|---|---|
+| Node.js | ≥ 18 | https://nodejs.org |
+| Python | ≥ 3.10 | https://python.org |
+| Git | Any | https://git-scm.com |
+| Expo CLI | Latest | `npm i -g expo-cli` |
 
-Identity AI: OpenCV (Live Face Match), Tesseract/EasyOCR (Document Extraction)
+---
 
-Risk AI: Scikit-learn (Heuristic Default Predictor)
+## 🚀 Quick Start
 
-Services: Firebase Auth (SMS OTP) & Firebase Cloud Messaging (Push Notifications)
+### 1. Clone the Repository
 
-Blockchain & Storage
-Network: Ethereum Sepolia Testnet (Local testing via Hardhat)
+```bash
+git clone https://github.com/absishere/Loan-Pouch.git
+cd Loan-Pouch
+```
 
-Smart Contracts: Solidity
+---
 
-Off-Chain Storage: IPFS (via Pinata) for encrypted KYC data
+### 2. Configure Environment Variables
 
-🔄 User Flow
+Create a `.env` file in the root of the project:
 
-1. Onboarding & KYC
-   User uploads Aadhar & PAN -> FastAPI extracts details via OCR.
+```bash
+# Root .env
+SEPOLIA_RPC_URL=https://eth-sepolia.g.alchemy.com/v2/<YOUR_ALCHEMY_KEY>
+PRIVATE_KEY=<YOUR_WALLET_PRIVATE_KEY>
+ETHERSCAN_API_KEY=<YOUR_ETHERSCAN_KEY>
+PINATA_API_KEY=<YOUR_PINATA_KEY>
+PINATA_API_SECRET=<YOUR_PINATA_SECRET>
+WEB3_RPC_URL=https://eth-sepolia.g.alchemy.com/v2/<YOUR_ALCHEMY_KEY>
+BINR_CONTRACT_ADDRESS=0x6e215881860d93a63Bf3CEb3EB2031F8c925c22e
+ESCROW_CONTRACT_ADDRESS=0x5F20ffB3BC50b37A4c7ed930a7D8e690d9f00a35
+BACKEND_WALLET_PRIVATE_KEY=<YOUR_DEPLOYER_PRIVATE_KEY>
+FIREBASE_WEB_API_KEY=<YOUR_FIREBASE_KEY>
+```
 
-User verifies phone number via Firebase SMS OTP.
+> **Note:** The contracts above are already deployed on Sepolia. You only need to redeploy if you make Solidity changes.
 
-User takes a live selfie -> FastAPI runs an OpenCV liveness/face match.
+---
 
-Data is encrypted and sent to IPFS. IPFS hash and isVerified boolean are stored on the Blockchain.
+### 3. 🔗 Smart Contracts (Compile & Deploy)
 
-User registers local device biometrics (Fingerprint/Face) and sets a transaction PIN (tPIN).
+```bash
+cd smart-contracts
 
-2. Borrowing Flow
-   Borrower requests a loan (Amount, Duration, Purpose). Note: Max 2 active loans allowed.
+# Install dependencies
+npm install
 
-FastAPI calculates the AI Default Predictor score.
+# Compile contracts (uses viaIR to handle large contract)
+npx hardhat compile
 
-Request is pushed to the Marketplace. Note: Requests expire if unfunded within 3 days.
+# Deploy to Sepolia testnet
+npx hardhat run scripts/clean_deploy.js --network sepolia
+```
 
-User's 3 Guardians receive a push notification to co-sign the request.
+After deploying, copy the printed addresses into your root `.env` as `BINR_CONTRACT_ADDRESS` and `ESCROW_CONTRACT_ADDRESS`.
 
-3. Lending & Escrow Flow
-   Lender browses the Marketplace, viewing Borrower Trust Scores and AI Risk metrics.
+---
 
-Lender clicks "Fund", authenticating via Biometrics + tPIN.
+### 4. 🐍 Backend (FastAPI)
 
-Funds (B-INR token) move from the Lender to the LoanEscrow.sol Smart Contract.
+```bash
+cd backend
 
-Once 2-of-3 Guardians approve, the Smart Contract instantly releases funds to the Borrower.
+# Create and activate a virtual environment
+python -m venv venv
 
-Repayments are sent back to the Smart Contract, which routes principal + interest back to the Lender and updates the gamified Trust Score.
+# Windows:
+.\venv\Scripts\activate
+# macOS/Linux:
+source venv/bin/activate
 
-🏛️ System Architecture
-Zone 1: Mobile TEE (Trusted Execution Environment) handles raw biometric data. Biometric hashes never leave the device.
+# Install Python dependencies
+pip install -r requirements.txt
 
-Zone 2: FastAPI Backend acts as a stateless relay, handling heavy compute (OCR/OpenCV/AI) and throwing away sensitive images immediately after IPFS encryption.
+# Start the FastAPI server
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
 
-Zone 3: Smart Contracts act as the decentralized, trustless bank, holding funds in escrow and executing the gamified interest rate logic immutably.
+✅ API docs available at: **http://127.0.0.1:8000/docs**
 
-🌍 Real-World Feasibility (The RBI CBDC Roadmap)
-While this hackathon prototype utilizes B-INR (a custom ERC-20 stablecoin) to demonstrate smart contract logic, the real-world production architecture is designed specifically for the Reserve Bank of India's Digital Rupee (e₹).
+---
 
-By integrating with the APIs of the 19 current CBDC pilot banks (SBI, HDFC, ICICI, etc.), Loan Pouch will act as the decentralized trust and escrow layer sitting directly on top of India's compliant, government-backed digital fiat infrastructure.
+### 5. 🌐 Web Frontend (Next.js)
+
+```bash
+cd frontend-web
+
+# Install dependencies
+npm install
+
+# The .env.local is already configured. To override:
+# NEXT_PUBLIC_API_URL=http://127.0.0.1:8000/api
+# NEXT_PUBLIC_ESCROW_ADDRESS=0x5F20ffB3BC50b37A4c7ed930a7D8e690d9f00a35
+
+# Start development server
+npm run dev
+```
+
+✅ Web dashboard available at: **http://localhost:3000**
+
+---
+
+### 6. 📱 Mobile App (Expo)
+
+```bash
+cd frontend-mobile
+
+# Install dependencies
+npm install
+
+# Start the Expo dev server
+npx expo start
+```
+
+- Press `a` to open on Android emulator
+- Press `i` to open on iOS simulator
+- Scan the QR code with [Expo Go](https://expo.dev/client) on your physical device
+
+> **Android emulator note:** The app uses `10.0.2.2:8000` to reach the host machine's backend. iOS simulator uses `127.0.0.1:8000`.
+
+---
+
+### 7. 🧠 KYC / Face-Match Module (Vite)
+
+```bash
+cd frontend-kyc/frontend
+
+# Install dependencies
+npm install
+
+# Download ML face detection models
+python ../download_models.py
+
+# Start the KYC module
+npm run dev
+```
+
+✅ KYC module available at: **http://localhost:5173**
+
+---
+
+## 🔄 Full System Flow
+
+```
+User (Mobile/Web)
+       │
+       ▼
+FastAPI Backend (:8000)
+   │         │
+   │         ▼
+   │    web3_service.py ──► Sepolia Testnet
+   │    kyc_service.py  ──► IPFS via Pinata
+   │
+   ▼
+LoanPouchEscrow.sol (Sepolia)
+   ├── requestLoan()         — Creates escrow entry
+   ├── fundLoan()            — Lender deposits B-INR
+   ├── approveByGuardian()   — Weighted trust-score approval
+   ├── claimDisbursementTranche() — 25% Milestone release
+   ├── repayLoan()           — Repayment + Trust Score update
+   └── migrateWallet()       — 2-of-3 Guardian recovery
+```
+
+---
+
+## 🧪 Testing the Flow
+
+### Check backend is live:
+```bash
+curl http://127.0.0.1:8000/health
+```
+
+### Get AI risk score:
+```bash
+curl -X POST http://127.0.0.1:8000/api/loans/risk-score \
+  -H "Content-Type: application/json" \
+  -d '{"trust_score": 450, "loan_amount": 15000, "duration_days": 30, "guardian_count": 3}'
+```
+
+### Query a live loan from the blockchain:
+```bash
+curl http://127.0.0.1:8000/api/loans/0
+```
+
+---
+
+## 🏛️ Smart Contract Architecture
+
+| Contract | Address (Sepolia) |
+|---|---|
+| `B_INR` (Stablecoin) | `0x6e215881860d93a63Bf3CEb3EB2031F8c925c22e` |
+| `LoanPouchEscrow` | `0x5F20ffB3BC50b37A4c7ed930a7D8e690d9f00a35` |
+
+Key contract features:
+- **State Machine:** `Gathering → Pending → Disbursed → Repaid / Defaulted / Cancelled`
+- **Max Active Loans:** 2 per borrower
+- **Milestone Threshold:** ≥ 10,00,000 B-INR triggers 4-tranche disbursement
+- **Guardian Weighting:** Trust Score ≥ 50 = `approvalWeight = 2`
+- **ZK Gate:** `verifyIdentityProof()` required for all loans above threshold
+
+---
+
+## 👥 Team
+
+| Member | Branch | Contribution |
+|---|---|---|
+| Abbas | `main` | Architecture, Smart Contracts, Backend, Integration |
+| Anchita | `anchita` | Web Dashboard (Next.js) |
+| Atharv | `atharv` | Smart Contract State Machine |
+| Rushikesh | `Rushikesh` | KYC Face-Match ML Module |
+
+---
+
+## 📄 License
+
+MIT License — Built with ❤️ for Nakshatra Hackathon
