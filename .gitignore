@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv/
+env/
+.env
+*.egg-info/
+dist/
+build/
+
+# Firebase Service Account — NEVER commit this
+firebase-service-account.json
+
+# Node / Hardhat
+node_modules/
+smart-contracts/node_modules/
+
+# Hardhat artifacts (large, compiled from source)
+# We keep artifacts/ tracked because the FastAPI backend config reads ABIs directly from here.
+# smart-contracts/artifacts/
+smart-contracts/cache/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
