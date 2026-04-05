@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Activity, Bell, Globe, Scale, Users, X } from "lucide-react";
 
 import { api, payments } from "@/lib/api";
-import { getCurrentUser } from "@/lib/session";
+import { addDemoBalance, getCurrentUser, getDemoBalance } from "@/lib/session";
 
 export default function DashboardPage() {
   const [loans, setLoans] = useState<any[]>([]);
@@ -16,11 +16,13 @@ export default function DashboardPage() {
   const [method, setMethod] = useState<"card" | "upi">("card");
   const [cardNumber, setCardNumber] = useState("");
   const [upiId, setUpiId] = useState("");
+  const [walletBalance, setWalletBalance] = useState(0);
 
   useEffect(() => {
     const current = getCurrentUser();
     if (current?.name) {
       setUser({ name: current.name });
+      setWalletBalance(getDemoBalance(current.walletAddress));
     }
   }, []);
 
@@ -34,6 +36,8 @@ export default function DashboardPage() {
     setMinting(true);
     try {
       const mintRes = await payments.mintDemoToken(wallet, depositAmount);
+      const updatedBalance = addDemoBalance(wallet, depositAmount);
+      setWalletBalance(updatedBalance);
       if (mintRes.status === "minted") {
         alert(`Payment successful and ${depositAmount} B-INR minted. TX: ${mintRes.tx_hash}`);
       } else {
@@ -92,7 +96,6 @@ export default function DashboardPage() {
     fetchDashboard();
   }, []);
 
-  const totalMarketValue = loans.reduce((acc, curr) => acc + curr.target_amount / 1e18, 0);
   const participants = new Set<string>([
     ...loans.map((l) => l.borrower),
     ...loans.flatMap((l) => l.guardians || []),
@@ -207,10 +210,10 @@ export default function DashboardPage() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-6 lg:mb-8">
           <div className="bg-white border border-gray-200 rounded-xl p-4 lg:p-6">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs lg:text-sm text-gray-600">Total Market Value</span>
+              <span className="text-xs lg:text-sm text-gray-600">Your Demo B-INR Balance</span>
               <Globe size={16} className="text-gray-400" />
             </div>
-            <p className="text-xl lg:text-3xl font-bold font-syne text-gray-900">{totalMarketValue.toFixed(1)} B-INR</p>
+            <p className="text-xl lg:text-3xl font-bold font-syne text-gray-900">{walletBalance.toFixed(2)} B-INR</p>
           </div>
 
           <div className="bg-white border border-gray-200 rounded-xl p-4 lg:p-6">

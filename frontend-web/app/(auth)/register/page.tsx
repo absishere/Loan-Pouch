@@ -42,7 +42,6 @@ export default function RegisterPage() {
   const [manualPan, setManualPan] = useState(false);
   const [mobileDone, setMobileDone] = useState(false);
   const [faceDone, setFaceDone] = useState(false);
-  const [sessionInfo, setSessionInfo] = useState("");
   const [otpCode, setOtpCode] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [ocrMode, setOcrMode] = useState<"backend-gemini" | "manual">("backend-gemini");
@@ -197,48 +196,30 @@ export default function RegisterPage() {
     setPanDone(true);
   };
 
-  const handleSendOtp = async () => {
+  const handleSendOtp = () => {
     if (!profile.phone || profile.phone.length < 10) {
       setError("Enter a valid mobile number");
       return;
     }
     setLoading(true);
     setError(null);
-    try {
-      const normalized = apiUrl.trim().replace(/\/+$/, "");
-      if (normalized) setApiBaseUrl(normalized);
-      const res = await auth.sendOtp(profile.phone);
-      setSessionInfo(res.session_info);
-      setOtpSent(true);
-      alert("OTP sent. For demo use code 123456.");
-    } catch (e: any) {
-      const message = e?.message || "Failed to send OTP";
-      if (String(message).toLowerCase().includes("failed to fetch")) {
-        setError("Could not reach backend. Set Backend API URL to host laptop IP (example: http://192.168.1.10:8000/api).");
-      } else {
-        setError(message);
-      }
-    } finally {
-      setLoading(false);
-    }
+    setOtpSent(true);
+    alert("Demo OTP sent. Use 123456.");
+    setLoading(false);
   };
 
-  const handleVerifyOtp = async () => {
+  const handleVerifyOtp = () => {
     const otp = otpCode.replace(/\D/g, "").slice(0, 6);
     if (otp.length !== 6) {
       setError("OTP must be exactly 6 digits.");
       return;
     }
-    setLoading(true);
-    setError(null);
-    try {
-      await auth.verifyOtp(sessionInfo, otp);
-      setMobileDone(true);
-    } catch {
-      setError("Invalid OTP code");
-    } finally {
-      setLoading(false);
+    if (otp !== "123456") {
+      setError("Invalid OTP. Use demo OTP 123456.");
+      return;
     }
+    setError(null);
+    setMobileDone(true);
   };
 
   const startCamera = async () => {
