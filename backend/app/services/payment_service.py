@@ -40,12 +40,18 @@ class PaymentService:
             checksum += d
         return checksum % 10 == 0
 
-    def create_order(self, amount_inr: float, receipt: str | None = None) -> dict:
+    def create_order(self, amount_inr: float, receipt: str | None = None, method: str | None = None) -> dict:
         amount_inr = float(amount_inr)
         if amount_inr <= 0:
             return {"error": "Amount must be greater than zero"}
 
+        method_l = (method or "").strip().lower()
+        if method_l and method_l not in {"card", "upi"}:
+            return {"error": "Unsupported payment method"}
+
         upi_allowed = amount_inr < 100000
+        if method_l == "upi" and not upi_allowed:
+            return {"error": "UPI is only allowed below INR 100000"}
         if self.mode == "razorpay" and self.client:
             payload = {
                 "amount": int(amount_inr * 100),
@@ -56,8 +62,15 @@ class PaymentService:
             order = self.client.order.create(data=payload)
             order["mode"] = "razorpay"
             order["upi_allowed"] = upi_allowed
-            order["allowed_methods"] = ["card", "upi"] if upi_allowed else ["card"]
+            allowed = ["card", "upi"] if upi_allowed else ["card"]
+            if method_l:
+                allowed = [method_l]
+            order["allowed_methods"] = allowed
             return order
+
+        allowed_methods = ["card", "upi"] if upi_allowed else ["card"]
+        if method_l:
+            allowed_methods = [method_l]
 
         return {
             "id": self._random_id("order_mock"),
@@ -66,7 +79,7 @@ class PaymentService:
             "status": "created",
             "created_at": datetime.now(timezone.utc).isoformat(),
             "mode": "mock",
-            "allowed_methods": ["card", "upi"] if upi_allowed else ["card"],
+            "allowed_methods": allowed_methods,
             "upi_allowed": upi_allowed,
             "card_requires_valid_details": amount_inr >= 100000,
         }

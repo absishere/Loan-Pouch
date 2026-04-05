@@ -65,7 +65,7 @@ npm run deploy:clean
 
 ## Demo Flow (Mentoring Round)
 1. Register user on web (`/register`), complete KYC + OTP (fallback exists for demo).
-2. Add funds from dashboard (mock card/UPI + faucet mint to LP-INR).
+2. Add funds from dashboard (mock card/UPI + faucet mint to B-INR).
 3. Borrower creates loan from `/borrow` (direct wallet tx).
 4. Lender funds loan from `/lend` (direct wallet tx).
 5. Guaranter approval via `/guaranter`.

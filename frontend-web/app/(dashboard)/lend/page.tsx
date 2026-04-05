@@ -49,7 +49,7 @@ export default function LendPage() {
 
     const remaining = Math.max(0, loan.target_amount - loan.gathered_amount);
     const maxAmount = Number(ethers.formatUnits(BigInt(remaining), 18));
-    const amount = prompt(`Enter LP-INR amount to lend (max ${maxAmount.toFixed(2)}):`);
+    const amount = prompt(`Enter B-INR amount to lend (max ${maxAmount.toFixed(2)}):`);
     if (!amount) return;
 
     try {

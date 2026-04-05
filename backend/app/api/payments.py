@@ -9,6 +9,7 @@ router = APIRouter(prefix="/payments", tags=["Payments"])
 class CreateOrderRequest(BaseModel):
     amount: float
     currency: str = "INR"
+    method: str | None = None
 
 
 class MockChargeRequest(BaseModel):
@@ -27,7 +28,7 @@ class VerifyPaymentRequest(BaseModel):
 
 @router.post("/create-order")
 async def create_order(request: CreateOrderRequest, service: PaymentService = Depends(get_payment_service)):
-    order = service.create_order(amount_inr=request.amount)
+    order = service.create_order(amount_inr=request.amount, method=request.method)
     if "error" in order:
         raise HTTPException(status_code=400, detail=order["error"])
     return order

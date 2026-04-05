@@ -168,7 +168,7 @@ export const kyc = {
 };
 
 export const payments = {
-  createOrder: (amount: number) =>
+  createOrder: (amount: number, method: "card" | "upi") =>
     req<{
       id: string;
       amount: number;
@@ -179,7 +179,7 @@ export const payments = {
       card_requires_valid_details: boolean;
     }>("/payments/create-order", {
       method: "POST",
-      body: JSON.stringify({ amount }),
+      body: JSON.stringify({ amount, method }),
     }),
 
   mockCharge: (payload: { order_id: string; amount: number; method: "card" | "upi"; card_number?: string; upi_id?: string }) =>
