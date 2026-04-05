@@ -25,6 +25,8 @@ class Settings(BaseSettings):
 
     FIREBASE_SERVICE_ACCOUNT_PATH: str = "firebase-service-account.json"
     FIREBASE_WEB_API_KEY: str = ""
+    GEMINI_API_KEY: str = ""
+    GEMINI_MODEL: str = "gemini-2.5-flash"
 
     RAZORPAY_KEY_ID: str = ""
     RAZORPAY_KEY_SECRET: str = ""

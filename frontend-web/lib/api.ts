@@ -131,6 +131,42 @@ export const auth = {
     ),
 };
 
+export const kyc = {
+  uploadId: async (file: File, docType: "aadhaar" | "pan") => {
+    const formData = new FormData();
+    formData.append("file", file);
+    const res = await fetch(`${BASE_URL}/kyc/extract-${docType}`, {
+      method: "POST",
+      body: formData,
+    });
+    const body = await res.json();
+    if (!res.ok) {
+      throw new Error(body?.detail || "OCR failed");
+    }
+    return body as {
+      status: string;
+      doc_type: string;
+      data: { name?: string; dob?: string; documentNumber?: string; documentType?: string };
+      manual_entry_allowed?: boolean;
+    };
+  },
+
+  matchFace: async (selfieBlob: Blob, documentBlob: Blob) => {
+    const formData = new FormData();
+    formData.append("selfie", new File([selfieBlob], "selfie.jpg", { type: "image/jpeg" }));
+    formData.append("document", new File([documentBlob], "document.jpg", { type: "image/jpeg" }));
+    const res = await fetch(`${BASE_URL}/kyc/match-face`, {
+      method: "POST",
+      body: formData,
+    });
+    const body = await res.json();
+    if (!res.ok) {
+      throw new Error(body?.detail || "Face match failed");
+    }
+    return body as { status: string; is_match: boolean; confidence: number; is_live: boolean };
+  },
+};
+
 export const payments = {
   createOrder: (amount: number) =>
     req<{

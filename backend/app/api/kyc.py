@@ -1,9 +1,9 @@
 """KYC endpoints: document OCR extraction and face matching."""
-import io
 import logging
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException
-from app.services.kyc_service import extract_id_details, match_face
+from app.services.kyc_service import match_face
 from app.services.ipfs_service import pin_kyc_metadata
+from app.services.gemini_ocr_service import extract_document_with_gemini
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/kyc", tags=["KYC"])
@@ -16,8 +16,19 @@ async def api_extract_aadhaar(file: UploadFile = File(...)):
     Image is processed in-memory and NOT stored anywhere.
     """
     image_bytes = await file.read()
-    result = extract_id_details(image_bytes, doc_type="aadhaar")
-    return {"status": "extracted", "doc_type": "aadhaar", "data": result}
+    try:
+        result = extract_document_with_gemini(
+            image_bytes=image_bytes,
+            mime_type=file.content_type or "image/jpeg",
+            doc_type="aadhaar",
+        )
+        return {"status": "extracted", "doc_type": "aadhaar", "data": result, "manual_entry_allowed": False}
+    except Exception as gemini_error:
+        logger.warning("Gemini OCR failed for Aadhaar: %s", gemini_error)
+        raise HTTPException(
+            status_code=422,
+            detail="Gemini OCR failed. Please enter Aadhaar details manually and continue face verification.",
+        )
 
 
 @router.post("/extract-pan", summary="OCR extract details from PAN card image")
@@ -27,8 +38,19 @@ async def api_extract_pan(file: UploadFile = File(...)):
     Image is processed in-memory and NOT stored anywhere.
     """
     image_bytes = await file.read()
-    result = extract_id_details(image_bytes, doc_type="pan")
-    return {"status": "extracted", "doc_type": "pan", "data": result}
+    try:
+        result = extract_document_with_gemini(
+            image_bytes=image_bytes,
+            mime_type=file.content_type or "image/jpeg",
+            doc_type="pan",
+        )
+        return {"status": "extracted", "doc_type": "pan", "data": result, "manual_entry_allowed": False}
+    except Exception as gemini_error:
+        logger.warning("Gemini OCR failed for PAN: %s", gemini_error)
+        raise HTTPException(
+            status_code=422,
+            detail="Gemini OCR failed. Please enter PAN details manually.",
+        )
 
 
 @router.post("/match-face", summary="Match live selfie against document photo")

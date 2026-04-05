@@ -43,3 +43,29 @@ export const verifyIdentity = async (selfieImageElement: HTMLImageElement | HTML
     
     return { match: isMatch, confidence: (1 - distance) * 100, distance };
 };
+
+export const verifyLivenessFromVideo = async (videoElement: HTMLVideoElement) => {
+    const first = await faceapi.detectSingleFace(videoElement)
+        .withFaceLandmarks()
+        .withFaceDescriptor();
+
+    if (!first) {
+        return { live: false, confidence: 0, reason: "No face detected in first frame." };
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 1300));
+
+    const second = await faceapi.detectSingleFace(videoElement)
+        .withFaceLandmarks()
+        .withFaceDescriptor();
+
+    if (!second) {
+        return { live: false, confidence: 0, reason: "No face detected in second frame." };
+    }
+
+    const drift = faceapi.euclideanDistance(first.descriptor, second.descriptor);
+    const isLive = drift > 0.02 && drift < 0.55;
+    const confidence = Math.max(0, Math.min(100, (1 - Math.abs(0.2 - drift)) * 100));
+
+    return { live: isLive, confidence, drift };
+};

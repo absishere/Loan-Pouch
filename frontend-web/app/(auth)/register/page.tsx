@@ -6,10 +6,10 @@ import { useEffect, useRef, useState } from "react";
 import { AlertCircle, Camera, CheckCircle, FileUp, Loader2, ShieldCheck, Smartphone } from "lucide-react";
 import { ethers } from "ethers";
 
-import { auth } from "@/lib/api";
+import { auth, kyc } from "@/lib/api";
 import { setCurrentUser } from "@/lib/session";
-import { performDocumentOCR, fileToBase64 } from "@/lib/services/GeminiService";
-import { loadModels, verifyIdentity } from "@/lib/services/FaceService";
+import { fileToBase64 } from "@/lib/services/GeminiService";
+import { loadModels, verifyIdentity, verifyLivenessFromVideo } from "@/lib/services/FaceService";
 
 async function sha256Hex(input: string): Promise<string> {
   const bytes = new TextEncoder().encode(input);
@@ -38,14 +38,36 @@ export default function RegisterPage() {
 
   const [aadhaarDone, setAadhaarDone] = useState(false);
   const [panDone, setPanDone] = useState(false);
+  const [manualAadhaar, setManualAadhaar] = useState(false);
+  const [manualPan, setManualPan] = useState(false);
   const [mobileDone, setMobileDone] = useState(false);
   const [faceDone, setFaceDone] = useState(false);
   const [sessionInfo, setSessionInfo] = useState("");
   const [otpCode, setOtpCode] = useState("");
   const [otpSent, setOtpSent] = useState(false);
+  const [ocrMode, setOcrMode] = useState<"backend-gemini" | "manual">("backend-gemini");
 
   const [stream, setStream] = useState<MediaStream | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+
+  const dataUrlFromBase64 = (rawBase64: string) => `data:image/jpeg;base64,${rawBase64}`;
+  const dataUrlToBlob = async (dataUrl: string) => (await fetch(dataUrl)).blob();
+  const captureVideoFrameBlob = async (video: HTMLVideoElement): Promise<Blob> =>
+    new Promise((resolve, reject) => {
+      const canvas = document.createElement("canvas");
+      canvas.width = video.videoWidth || 720;
+      canvas.height = video.videoHeight || 720;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        reject(new Error("Camera canvas unavailable"));
+        return;
+      }
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob((blob) => {
+        if (!blob) reject(new Error("Could not capture selfie"));
+        else resolve(blob);
+      }, "image/jpeg", 0.92);
+    });
 
   useEffect(() => {
     if (step === 4) {
@@ -69,17 +91,20 @@ export default function RegisterPage() {
     try {
       const file = e.target.files[0];
       const base64 = await fileToBase64(file);
-      const result = await performDocumentOCR(base64, file.type);
+      setProfile((prev) => ({ ...prev, aadhaarImage: base64 }));
+      const result = await kyc.uploadId(file, "aadhaar");
       setProfile((prev) => ({
         ...prev,
-        name: result.name || prev.name,
-        dob: result.dob || prev.dob,
-        aadhaar: result.documentNumber || prev.aadhaar,
-        aadhaarImage: base64,
+        name: result.data?.name || prev.name,
+        dob: result.data?.dob || prev.dob,
+        aadhaar: result.data?.documentNumber || prev.aadhaar,
       }));
+      setOcrMode("backend-gemini");
       setAadhaarDone(true);
-    } catch {
-      setError("OCR failed. You can enter details manually.");
+    } catch (err: any) {
+      setError(err?.message || "Gemini OCR failed. Enter details manually.");
+      setManualAadhaar(true);
+      setOcrMode("manual");
     } finally {
       setLoading(false);
     }
@@ -91,15 +116,37 @@ export default function RegisterPage() {
     setError(null);
     try {
       const file = e.target.files[0];
-      const base64 = await fileToBase64(file);
-      const result = await performDocumentOCR(base64, file.type);
-      setProfile((prev) => ({ ...prev, pan: result.documentNumber || prev.pan }));
+      const result = await kyc.uploadId(file, "pan");
+      setProfile((prev) => ({ ...prev, pan: result.data?.documentNumber || prev.pan }));
       setPanDone(true);
-    } catch {
-      setError("OCR failed. You can enter PAN manually.");
+    } catch (err: any) {
+      setError(err?.message || "Gemini OCR failed. Enter PAN manually.");
+      setManualPan(true);
     } finally {
       setLoading(false);
     }
+  };
+
+  const saveAadhaarManual = () => {
+    if (!profile.name.trim() || !profile.dob.trim() || !profile.aadhaar.trim()) {
+      setError("Enter name, DOB and Aadhaar number.");
+      return;
+    }
+    if (!profile.aadhaarImage) {
+      setError("Upload Aadhaar image for mandatory face verification.");
+      return;
+    }
+    setError(null);
+    setAadhaarDone(true);
+  };
+
+  const savePanManual = () => {
+    if (!profile.pan.trim()) {
+      setError("Enter PAN number.");
+      return;
+    }
+    setError(null);
+    setPanDone(true);
   };
 
   const handleSendOtp = async () => {
@@ -147,28 +194,51 @@ export default function RegisterPage() {
   };
 
   const captureAndVerify = async () => {
-    if (!videoRef.current || !profile.aadhaarImage) return;
+    if (!videoRef.current) return;
     setLoading(true);
     setError(null);
     try {
-      const idImg = new Image();
-      idImg.src = `data:image/jpeg;base64,${profile.aadhaarImage}`;
-      await new Promise((resolve) => {
-        idImg.onload = () => resolve(true);
-      });
-
-      const result = await verifyIdentity(videoRef.current, idImg);
-      if (!result.match) {
-        setError(`Face mismatch (${result.confidence.toFixed(1)}%)`);
+      const liveness = await verifyLivenessFromVideo(videoRef.current);
+      if (!liveness.live) {
+        setError("Liveness check failed. Move your face slightly and retry.");
         return;
       }
+
+      if (profile.aadhaarImage) {
+        const dataUrl = dataUrlFromBase64(profile.aadhaarImage);
+        const idImg = new Image();
+        idImg.src = dataUrl;
+        await new Promise((resolve) => {
+          idImg.onload = () => resolve(true);
+        });
+        const localMatch = await verifyIdentity(videoRef.current, idImg);
+        if (!localMatch.match) {
+          setError(`Face mismatch (${localMatch.confidence.toFixed(1)}%).`);
+          return;
+        }
+
+        const selfieBlob = await captureVideoFrameBlob(videoRef.current);
+        const docBlob = await dataUrlToBlob(dataUrl);
+        await kyc.matchFace(selfieBlob, docBlob);
+      } else if (manualAadhaar) {
+        // Alternate mandatory path when OCR/manual details are used without parseable document:
+        // OTP + live liveness challenge still required.
+        if (!mobileDone) {
+          setError("OTP verification is required before liveness-only fallback.");
+          return;
+        }
+      } else {
+        setError("Upload Aadhaar image to continue face verification.");
+        return;
+      }
+
       setFaceDone(true);
       if (stream) {
         stream.getTracks().forEach((track) => track.stop());
         setStream(null);
       }
-    } catch {
-      setError("Verification failed");
+    } catch (e: any) {
+      setError(e?.message || "Verification failed");
     } finally {
       setLoading(false);
     }
@@ -251,7 +321,10 @@ export default function RegisterPage() {
           {step === 1 && (
             <div className="space-y-4">
               <h2 className="text-2xl font-black font-syne flex items-center gap-2"><ShieldCheck size={22} /> Aadhaar Verification</h2>
-              {!aadhaarDone ? (
+              <p className="text-xs text-gray-500">
+                OCR source: {ocrMode === "backend-gemini" ? "Backend Gemini OCR (primary)" : "Manual Entry (fallback)"}
+              </p>
+              {!aadhaarDone && !manualAadhaar ? (
                 <label className="flex flex-col items-center justify-center border-4 border-dashed border-gray-200 rounded-3xl p-10 cursor-pointer hover:border-black">
                   <input type="file" accept="image/*" className="hidden" onChange={handleAadhaarUpload} disabled={loading} />
                   {loading ? <Loader2 className="w-12 h-12 animate-spin" /> : <FileUp className="w-16 h-16 text-gray-400" />}
@@ -259,11 +332,27 @@ export default function RegisterPage() {
                 </label>
               ) : (
                 <div className="space-y-3">
-                  <div className="bg-emerald-50 border border-emerald-300 rounded-xl p-4 flex items-center gap-3"><CheckCircle /> Aadhaar processed</div>
+                  <div className="bg-emerald-50 border border-emerald-300 rounded-xl p-4 flex items-center gap-3"><CheckCircle /> Aadhaar details ready</div>
+                  {!profile.aadhaarImage && (
+                    <label className="block border border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:bg-gray-50">
+                      <input type="file" accept="image/*" className="hidden" onChange={handleAadhaarUpload} />
+                      Upload Aadhaar Image (required for face verification)
+                    </label>
+                  )}
                   <input value={profile.name} onChange={(e) => setProfile({ ...profile, name: e.target.value })} className="w-full border rounded-lg px-4 py-2" placeholder="Full name" />
                   <input value={profile.dob} onChange={(e) => setProfile({ ...profile, dob: e.target.value })} className="w-full border rounded-lg px-4 py-2" placeholder="DOB" />
                   <input value={profile.aadhaar} onChange={(e) => setProfile({ ...profile, aadhaar: e.target.value })} className="w-full border rounded-lg px-4 py-2" placeholder="Aadhaar number" />
+                  {!aadhaarDone && (
+                    <button onClick={saveAadhaarManual} className="w-full bg-black text-white py-2 rounded-lg font-medium">
+                      Save Aadhaar Details
+                    </button>
+                  )}
                 </div>
+              )}
+              {!aadhaarDone && !manualAadhaar && (
+                <button onClick={() => { setManualAadhaar(true); setOcrMode("manual"); setError(null); }} className="w-full border border-gray-300 py-2 rounded-lg font-medium hover:bg-gray-50">
+                  Enter Aadhaar Details Manually
+                </button>
               )}
             </div>
           )}
@@ -271,14 +360,26 @@ export default function RegisterPage() {
           {step === 2 && (
             <div className="space-y-4">
               <h2 className="text-2xl font-black font-syne">PAN Verification</h2>
-              {!panDone ? (
+              {!panDone && !manualPan ? (
                 <label className="flex flex-col items-center justify-center border-4 border-dashed border-gray-200 rounded-3xl p-10 cursor-pointer hover:border-black">
                   <input type="file" accept="image/*" className="hidden" onChange={handlePanUpload} disabled={loading} />
                   {loading ? <Loader2 className="w-12 h-12 animate-spin" /> : <FileUp className="w-16 h-16 text-gray-400" />}
                   <p className="mt-3 font-bold">Upload PAN</p>
                 </label>
               ) : (
-                <input value={profile.pan} onChange={(e) => setProfile({ ...profile, pan: e.target.value })} className="w-full border rounded-lg px-4 py-2" placeholder="PAN number" />
+                <div className="space-y-3">
+                  <input value={profile.pan} onChange={(e) => setProfile({ ...profile, pan: e.target.value })} className="w-full border rounded-lg px-4 py-2" placeholder="PAN number" />
+                  {!panDone && (
+                    <button onClick={savePanManual} className="w-full bg-black text-white py-2 rounded-lg font-medium">
+                      Save PAN Details
+                    </button>
+                  )}
+                </div>
+              )}
+              {!panDone && !manualPan && (
+                <button onClick={() => { setManualPan(true); setError(null); }} className="w-full border border-gray-300 py-2 rounded-lg font-medium hover:bg-gray-50">
+                  Enter PAN Details Manually
+                </button>
               )}
             </div>
           )}
