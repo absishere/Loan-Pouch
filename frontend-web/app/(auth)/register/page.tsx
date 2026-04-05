@@ -49,6 +49,9 @@ export default function RegisterPage() {
 
   const [stream, setStream] = useState<MediaStream | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [dobPickerOpen, setDobPickerOpen] = useState(false);
+  const [dobMonth, setDobMonth] = useState<number>(new Date().getMonth());
+  const [dobYear, setDobYear] = useState<number>(new Date().getFullYear() - 20);
 
   const dataUrlFromBase64 = (rawBase64: string) => `data:image/jpeg;base64,${rawBase64}`;
   const dataUrlToBlob = async (dataUrl: string) => (await fetch(dataUrl)).blob();
@@ -68,6 +71,26 @@ export default function RegisterPage() {
         else resolve(blob);
       }, "image/jpeg", 0.92);
     });
+
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const daysInMonth = new Date(dobYear, dobMonth + 1, 0).getDate();
+  const monthStartDay = new Date(dobYear, dobMonth, 1).getDay();
+  const today = new Date();
+  const ageGate = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
+
+  const pickDob = (day: number) => {
+    const selected = new Date(dobYear, dobMonth, day);
+    if (selected > ageGate) {
+      setError("You must be at least 18 years old.");
+      return;
+    }
+    const dd = String(day).padStart(2, "0");
+    const mm = String(dobMonth + 1).padStart(2, "0");
+    const yyyy = String(dobYear);
+    setProfile((prev) => ({ ...prev, dob: `${dd}/${mm}/${yyyy}` }));
+    setDobPickerOpen(false);
+    setError(null);
+  };
 
   useEffect(() => {
     if (step === 4) {
@@ -340,7 +363,83 @@ export default function RegisterPage() {
                     </label>
                   )}
                   <input value={profile.name} onChange={(e) => setProfile({ ...profile, name: e.target.value })} className="w-full border rounded-lg px-4 py-2" placeholder="Full name" />
-                  <input value={profile.dob} onChange={(e) => setProfile({ ...profile, dob: e.target.value })} className="w-full border rounded-lg px-4 py-2" placeholder="DOB" />
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setDobPickerOpen((v) => !v)}
+                      className="w-full border-2 border-black rounded-xl px-4 py-3 text-left bg-white shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:translate-y-[-1px] transition-all"
+                    >
+                      {profile.dob ? `DOB: ${profile.dob}` : "Pick Date of Birth"}
+                    </button>
+                    {dobPickerOpen && (
+                      <div className="absolute z-30 mt-2 w-full bg-white border-2 border-black rounded-2xl p-3 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
+                        <div className="flex items-center gap-2 mb-3">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (dobMonth === 0) {
+                                setDobMonth(11);
+                                setDobYear((y) => y - 1);
+                              } else {
+                                setDobMonth((m) => m - 1);
+                              }
+                            }}
+                            className="px-2 py-1 border border-gray-300 rounded-lg"
+                          >
+                            ◀
+                          </button>
+                          <div className="flex-1 text-center font-bold">
+                            {monthNames[dobMonth]} {dobYear}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (dobMonth === 11) {
+                                setDobMonth(0);
+                                setDobYear((y) => y + 1);
+                              } else {
+                                setDobMonth((m) => m + 1);
+                              }
+                            }}
+                            className="px-2 py-1 border border-gray-300 rounded-lg"
+                          >
+                            ▶
+                          </button>
+                        </div>
+                        <div className="grid grid-cols-7 gap-1 text-[10px] font-bold text-gray-500 mb-1">
+                          {["S", "M", "T", "W", "T", "F", "S"].map((d) => (
+                            <div key={d} className="text-center py-1">{d}</div>
+                          ))}
+                        </div>
+                        <div className="grid grid-cols-7 gap-1">
+                          {Array.from({ length: monthStartDay }).map((_, i) => (
+                            <div key={`blank-${i}`} />
+                          ))}
+                          {Array.from({ length: daysInMonth }).map((_, i) => {
+                            const day = i + 1;
+                            const candidate = new Date(dobYear, dobMonth, day);
+                            const blocked = candidate > ageGate;
+                            return (
+                              <button
+                                key={day}
+                                type="button"
+                                onClick={() => pickDob(day)}
+                                disabled={blocked}
+                                className={`py-2 rounded-lg text-xs font-bold border ${
+                                  blocked
+                                    ? "text-gray-300 border-gray-200 cursor-not-allowed"
+                                    : "text-black border-gray-300 hover:bg-black hover:text-white"
+                                }`}
+                              >
+                                {day}
+                              </button>
+                            );
+                          })}
+                        </div>
+                        <p className="text-[10px] text-gray-500 mt-2">Only 18+ DOB is selectable.</p>
+                      </div>
+                    )}
+                  </div>
                   <input value={profile.aadhaar} onChange={(e) => setProfile({ ...profile, aadhaar: e.target.value })} className="w-full border rounded-lg px-4 py-2" placeholder="Aadhaar number" />
                   {!aadhaarDone && (
                     <button onClick={saveAadhaarManual} className="w-full bg-black text-white py-2 rounded-lg font-medium">
