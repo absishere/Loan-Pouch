@@ -164,10 +164,13 @@ export default function RegisterPage() {
   };
 
   const savePanManual = () => {
-    if (!profile.pan.trim()) {
-      setError("Enter PAN number.");
+    const pan = profile.pan.trim().toUpperCase();
+    const panPattern = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
+    if (!panPattern.test(pan)) {
+      setError("PAN must be in official format: AAAAA9999A");
       return;
     }
+    setProfile((prev) => ({ ...prev, pan }));
     setError(null);
     setPanDone(true);
   };
@@ -192,10 +195,15 @@ export default function RegisterPage() {
   };
 
   const handleVerifyOtp = async () => {
+    const otp = otpCode.replace(/\D/g, "").slice(0, 6);
+    if (otp.length !== 6) {
+      setError("OTP must be exactly 6 digits.");
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
-      await auth.verifyOtp(sessionInfo, otpCode);
+      await auth.verifyOtp(sessionInfo, otp);
       setMobileDone(true);
     } catch {
       setError("Invalid OTP code");
@@ -236,7 +244,7 @@ export default function RegisterPage() {
         });
         const localMatch = await verifyIdentity(videoRef.current, idImg);
         if (!localMatch.match) {
-          setError(`Face mismatch (${localMatch.confidence.toFixed(1)}%).`);
+          setError(`Face mismatch against uploaded Aadhaar photo (${localMatch.confidence.toFixed(1)}%).`);
           return;
         }
 
@@ -467,7 +475,18 @@ export default function RegisterPage() {
                 </label>
               ) : (
                 <div className="space-y-3">
-                  <input value={profile.pan} onChange={(e) => setProfile({ ...profile, pan: e.target.value })} className="w-full border rounded-lg px-4 py-2" placeholder="PAN number" />
+                  <input
+                    value={profile.pan}
+                    onChange={(e) =>
+                      setProfile({
+                        ...profile,
+                        pan: e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 10),
+                      })
+                    }
+                    className="w-full border rounded-lg px-4 py-2"
+                    placeholder="PAN number (AAAAA9999A)"
+                  />
+                  <p className="text-xs text-gray-500">Auto-formatted to official PAN pattern.</p>
                   {!panDone && (
                     <button onClick={savePanManual} className="w-full bg-black text-white py-2 rounded-lg font-medium">
                       Save PAN Details
@@ -494,8 +513,22 @@ export default function RegisterPage() {
                   </div>
                   {otpSent && (
                     <div className="space-y-2">
-                      <input value={otpCode} onChange={(e) => setOtpCode(e.target.value)} className="w-full border rounded-lg px-4 py-2" placeholder="Enter OTP" />
-                      <button onClick={handleVerifyOtp} className="w-full bg-black text-white py-2 rounded-lg">Verify OTP</button>
+                      <input
+                        value={otpCode}
+                        onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                        maxLength={6}
+                        className="w-full border rounded-lg px-4 py-2"
+                        placeholder="Enter 6-digit OTP"
+                        inputMode="numeric"
+                      />
+                      <button
+                        onClick={handleVerifyOtp}
+                        disabled={otpCode.length !== 6}
+                        className="w-full bg-black text-white py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Verify OTP
+                      </button>
+                      <p className="text-xs text-gray-500">Only exactly 6 digits are accepted.</p>
                     </div>
                   )}
                 </>
@@ -508,11 +541,21 @@ export default function RegisterPage() {
           {step === 4 && (
             <div className="space-y-4">
               <h2 className="text-2xl font-black font-syne flex items-center gap-2"><Camera size={22} /> Face Match</h2>
+              <p className="text-xs text-gray-500">
+                Face is verified against the uploaded Aadhaar image. Manual text entry does not skip biometric matching.
+              </p>
               {!faceDone ? (
                 <>
                   <div className="relative mx-auto w-64 h-64 rounded-full overflow-hidden border-4 border-black bg-gray-100 flex items-center justify-center">
                     {!stream && <button onClick={startCamera} className="bg-black text-white px-4 py-2 rounded-lg">Open Camera</button>}
-                    <video ref={videoRef} autoPlay playsInline muted className={`w-full h-full object-cover ${!stream ? "hidden" : ""}`} />
+                    <video
+                      ref={videoRef}
+                      autoPlay
+                      playsInline
+                      muted
+                      className={`w-full h-full object-cover ${!stream ? "hidden" : ""}`}
+                      style={{ transform: "scaleX(1)" }}
+                    />
                   </div>
                   {stream && <button onClick={captureAndVerify} className="w-full bg-black text-white py-2 rounded-lg">Verify Face</button>}
                 </>
