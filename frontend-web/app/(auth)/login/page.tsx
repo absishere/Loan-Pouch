@@ -2,23 +2,55 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-import { auth } from "@/lib/api";
+import { auth, getApiBaseUrl, setApiBaseUrl } from "@/lib/api";
 import { setCurrentUser } from "@/lib/session";
 
 export default function LoginPage() {
   const router = useRouter();
   const [phone, setPhone] = useState("");
   const [pin, setPin] = useState("");
+  const [apiUrl, setApiUrl] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [savingApi, setSavingApi] = useState(false);
+
+  useEffect(() => {
+    setApiUrl(getApiBaseUrl());
+  }, []);
+
+  const normalizeApiUrl = (url: string) => url.trim().replace(/\/+$/, "");
+
+  const saveBackendUrl = () => {
+    const normalized = normalizeApiUrl(apiUrl);
+    if (!normalized) {
+      setApiBaseUrl("");
+      setApiUrl(getApiBaseUrl());
+      setError(null);
+      return;
+    }
+    if (!/^https?:\/\/.+/i.test(normalized)) {
+      setError("Backend URL must start with http:// or https://");
+      return;
+    }
+    setSavingApi(true);
+    setApiBaseUrl(normalized);
+    setApiUrl(getApiBaseUrl());
+    setError(null);
+    setSavingApi(false);
+  };
 
   const handleLogin = async () => {
     setError(null);
     if (!phone || !pin) {
       setError("Enter phone number and mPIN.");
       return;
+    }
+
+    const normalized = normalizeApiUrl(apiUrl);
+    if (normalized) {
+      setApiBaseUrl(normalized);
     }
 
     try {
@@ -69,6 +101,26 @@ export default function LoginPage() {
               className="clay-input w-full px-4 py-3 focus:outline-none"
               placeholder="Enter 6-digit mPIN"
             />
+          </div>
+
+          <div className="mb-6">
+            <label className="block text-sm font-medium mb-2">Backend API URL (for cross-device login)</label>
+            <input
+              type="text"
+              value={apiUrl}
+              onChange={(e) => setApiUrl(e.target.value)}
+              className="clay-input w-full px-4 py-3 focus:outline-none"
+              placeholder="http://192.168.1.10:8000/api"
+            />
+            <p className="text-xs text-gray-500 mt-2">Use your host laptop IP so other devices can log in.</p>
+            <button
+              type="button"
+              onClick={saveBackendUrl}
+              disabled={savingApi}
+              className="mt-2 text-xs font-bold uppercase tracking-wide border border-black rounded-xl px-3 py-2 hover:bg-black hover:text-white transition-colors disabled:opacity-60"
+            >
+              Save Backend URL
+            </button>
           </div>
 
           {error && <div className="mb-4 text-sm text-red-600 font-medium">{error}</div>}

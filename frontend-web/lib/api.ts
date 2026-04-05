@@ -1,4 +1,33 @@
-﻿const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api";
+﻿function resolveBaseUrl(): string {
+  const envUrl = process.env.NEXT_PUBLIC_API_URL;
+  if (envUrl) return envUrl;
+
+  if (typeof window !== "undefined") {
+    const runtime = window.localStorage.getItem("lp_api_base_url");
+    if (runtime) return runtime;
+
+    const host = window.location.hostname;
+    if (host && host !== "localhost" && host !== "127.0.0.1") {
+      return `http://${host}:8000/api`;
+    }
+  }
+
+  return "http://127.0.0.1:8000/api";
+}
+
+export function getApiBaseUrl(): string {
+  return resolveBaseUrl();
+}
+
+export function setApiBaseUrl(url: string) {
+  if (typeof window === "undefined") return;
+  const normalized = url.trim().replace(/\/+$/, "");
+  if (!normalized) {
+    window.localStorage.removeItem("lp_api_base_url");
+    return;
+  }
+  window.localStorage.setItem("lp_api_base_url", normalized);
+}
 
 export const CONTRACTS = {
   escrow: process.env.NEXT_PUBLIC_ESCROW_ADDRESS || "",
@@ -8,7 +37,7 @@ export const CONTRACTS = {
 };
 
 async function req<T>(path: string, opts?: RequestInit): Promise<T> {
-  const res = await fetch(`${BASE_URL}${path}`, {
+  const res = await fetch(`${resolveBaseUrl()}${path}`, {
     headers: { "Content-Type": "application/json", ...opts?.headers },
     ...opts,
   });
@@ -135,7 +164,7 @@ export const kyc = {
   uploadId: async (file: File, docType: "aadhaar" | "pan") => {
     const formData = new FormData();
     formData.append("file", file);
-    const res = await fetch(`${BASE_URL}/kyc/extract-${docType}`, {
+    const res = await fetch(`${resolveBaseUrl()}/kyc/extract-${docType}`, {
       method: "POST",
       body: formData,
     });
@@ -155,7 +184,7 @@ export const kyc = {
     const formData = new FormData();
     formData.append("selfie", new File([selfieBlob], "selfie.jpg", { type: "image/jpeg" }));
     formData.append("document", new File([documentBlob], "document.jpg", { type: "image/jpeg" }));
-    const res = await fetch(`${BASE_URL}/kyc/match-face`, {
+    const res = await fetch(`${resolveBaseUrl()}/kyc/match-face`, {
       method: "POST",
       body: formData,
     });
@@ -264,4 +293,5 @@ export interface RiskResponse {
   risk_label: string;
   risk_probability: number;
 }
+
 
