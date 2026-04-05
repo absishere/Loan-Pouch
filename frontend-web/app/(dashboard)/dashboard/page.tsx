@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { Activity, Bell, Globe, Scale, Users, X } from "lucide-react";
 import { ethers } from "ethers";
-import Script from "next/script";
 
 import { api, payments } from "@/lib/api";
 import { getCurrentUser } from "@/lib/session";
@@ -18,7 +17,6 @@ export default function DashboardPage() {
   const [method, setMethod] = useState<"card" | "upi">("card");
   const [cardNumber, setCardNumber] = useState("");
   const [upiId, setUpiId] = useState("");
-  const RAZORPAY_KEY_ID = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "";
 
   useEffect(() => {
     const current = getCurrentUser();
@@ -68,67 +66,14 @@ export default function DashboardPage() {
 
     try {
       const order = await payments.createOrder(depositAmount, method);
-
-      if (order.mode === "razorpay") {
-        if (!(window as any).Razorpay) {
-          alert("Razorpay SDK not loaded. Please refresh.");
-          return;
-        }
-        if (!RAZORPAY_KEY_ID) {
-          alert("NEXT_PUBLIC_RAZORPAY_KEY_ID is missing.");
-          return;
-        }
-
-        const options = {
-          key: RAZORPAY_KEY_ID,
-          amount: order.amount,
-          currency: order.currency,
-          name: "Loan Pouch",
-          description: `Test Mode Purchase - INR ${depositAmount}`,
-          order_id: order.id,
-          method: {
-            card: order.allowed_methods.includes("card"),
-            upi: order.allowed_methods.includes("upi"),
-            netbanking: false,
-            wallet: false,
-            emi: false,
-            paylater: false,
-          },
-          prefill: {
-            name: user?.name || "Member",
-            contact: "9999999999",
-          },
-          theme: { color: "#000000" },
-          handler: async (response: any) => {
-            const verifyRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api"}/payments/verify`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-              }),
-            });
-            if (!verifyRes.ok) {
-              alert("Payment verification failed.");
-              return;
-            }
-            await handleMintBinr();
-          },
-        };
-
-        const rzp = new (window as any).Razorpay(options);
-        rzp.open();
-      } else {
-        await payments.mockCharge({
-          order_id: order.id,
-          amount: depositAmount,
-          method,
-          card_number: method === "card" ? cardNumber : undefined,
-          upi_id: method === "upi" ? upiId : undefined,
-        });
-        await handleMintBinr();
-      }
+      await payments.mockCharge({
+        order_id: order.id,
+        amount: depositAmount,
+        method,
+        card_number: method === "card" ? cardNumber : undefined,
+        upi_id: method === "upi" ? upiId : undefined,
+      });
+      await handleMintBinr();
     } catch (error: any) {
       alert(error?.message || "Payment failed");
     }
@@ -160,14 +105,14 @@ export default function DashboardPage() {
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="font-bold text-lg">Fiat On-Ramp (Razorpay Test / Mock)</h3>
+              <h3 className="font-bold text-lg">Fiat On-Ramp (Razorpay Test Simulator)</h3>
               <button onClick={() => setShowOnramp(false)} className="text-gray-500 hover:text-black">
                 <X size={20} />
               </button>
             </div>
 
             <p className="text-sm text-gray-500 mb-4">
-              Test mode only. Use Razorpay test card/UPI details when backend `PAYMENT_MODE=razorpay`, or built-in mock otherwise.
+              Demo mode only. Payment is simulated and follows Razorpay-like validation rules.
             </p>
 
             <div className="mb-4">
@@ -205,7 +150,7 @@ export default function DashboardPage() {
                   type="text"
                   value={cardNumber}
                   onChange={(e) => setCardNumber(e.target.value)}
-                  placeholder={depositAmount >= 100000 ? "Valid test card required" : "Mock/test card number"}
+                  placeholder={depositAmount >= 100000 ? "Valid card number required" : "Any 12-19 digit demo card"}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg"
                 />
               </div>
@@ -318,7 +263,6 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
-      <Script src="https://checkout.razorpay.com/v1/checkout.js" />
     </div>
   );
 }
