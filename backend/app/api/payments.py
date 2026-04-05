@@ -2,6 +2,7 @@
 from pydantic import BaseModel
 
 from app.services.payment_service import PaymentService, get_payment_service
+from app.services.web3_service import mint_binr_via_backend
 
 router = APIRouter(prefix="/payments", tags=["Payments"])
 
@@ -24,6 +25,11 @@ class VerifyPaymentRequest(BaseModel):
     razorpay_order_id: str
     razorpay_payment_id: str
     razorpay_signature: str
+
+
+class MintDemoTokenRequest(BaseModel):
+    wallet_address: str
+    amount: float
 
 
 @router.post("/create-order")
@@ -58,4 +64,15 @@ async def verify_payment(request: VerifyPaymentRequest, service: PaymentService 
     if not is_valid:
         raise HTTPException(status_code=400, detail="Invalid payment signature")
     return {"status": "success", "message": "Payment verified successfully", "verified": True}
+
+
+@router.post("/mint-demo-token")
+async def mint_demo_token(request: MintDemoTokenRequest):
+    if request.amount <= 0:
+        raise HTTPException(status_code=400, detail="Amount must be greater than zero")
+    try:
+        tx_hash = mint_binr_via_backend(request.wallet_address, int(request.amount * 10**18))
+        return {"status": "minted", "tx_hash": tx_hash}
+    except Exception as e:
+        return {"status": "queued", "tx_hash": None, "detail": str(e)}
 

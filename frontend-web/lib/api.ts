@@ -216,6 +216,12 @@ export const payments = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
+
+  mintDemoToken: (wallet_address: string, amount: number) =>
+    req<{ status: string; tx_hash?: string | null; detail?: string }>("/payments/mint-demo-token", {
+      method: "POST",
+      body: JSON.stringify({ wallet_address, amount }),
+    }),
 };
 
 export interface LoanResponse {

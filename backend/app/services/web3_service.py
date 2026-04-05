@@ -236,6 +236,25 @@ def repay_loan_via_backend(loan_id: int, repay_allowance_hint_wei: int = 1_000_0
     return _sign_and_send(fn)
 
 
+def mint_binr_via_backend(to_wallet: str, amount_wei: int) -> str:
+    """
+    Mint demo B-INR to a wallet using backend signer.
+    Supports common faucet/mint function variants in deployed BINR contracts.
+    """
+    binr = get_binr_contract()
+    to_checksum = Web3.to_checksum_address(to_wallet)
+    amt = int(amount_wei)
+
+    if hasattr(binr.functions, "faucetMint"):
+        fn = binr.functions.faucetMint(to_checksum, amt)
+        return _sign_and_send(fn)
+    if hasattr(binr.functions, "mint"):
+        fn = binr.functions.mint(to_checksum, amt)
+        return _sign_and_send(fn)
+
+    raise RuntimeError("BINR contract has no faucetMint/mint function")
+
+
 def register_identity_commitment(wallet: str, phone_hash_hex: str, doc_hash_hex: str, commitment_hex: str) -> str | None:
     """
     Persist uniqueness commitment on-chain if IdentityRegistry is configured.
