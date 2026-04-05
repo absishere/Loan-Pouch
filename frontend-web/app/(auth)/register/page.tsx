@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { AlertCircle, Camera, CheckCircle, FileUp, Loader2, ShieldCheck, Smartphone } from "lucide-react";
 import { ethers } from "ethers";
 
-import { auth, getApiBaseUrl, kyc, setApiBaseUrl } from "@/lib/api";
+import { auth, kyc } from "@/lib/api";
 import { setCurrentUser } from "@/lib/session";
 import { fileToBase64 } from "@/lib/services/GeminiService";
 import { loadModels, verifyIdentity, verifyLivenessFromVideo } from "@/lib/services/FaceService";
@@ -51,7 +51,6 @@ export default function RegisterPage() {
   const [dobPickerOpen, setDobPickerOpen] = useState(false);
   const [dobMonth, setDobMonth] = useState<number>(new Date().getMonth());
   const [dobYear, setDobYear] = useState<number>(new Date().getFullYear() - 20);
-  const [apiUrl, setApiUrl] = useState("");
 
   const dataUrlFromBase64 = (rawBase64: string) => `data:image/jpeg;base64,${rawBase64}`;
   const dataUrlToBlob = async (dataUrl: string) => (await fetch(dataUrl)).blob();
@@ -97,27 +96,6 @@ export default function RegisterPage() {
       loadModels().catch(() => null);
     }
   }, [step]);
-
-  useEffect(() => {
-    setApiUrl(getApiBaseUrl());
-  }, []);
-
-  const saveApiUrl = () => {
-    const normalized = apiUrl.trim().replace(/\/+$/, "");
-    if (!normalized) {
-      setApiBaseUrl("");
-      setApiUrl(getApiBaseUrl());
-      setError(null);
-      return;
-    }
-    if (!/^https?:\/\/.+/i.test(normalized)) {
-      setError("Backend URL must start with http:// or https://");
-      return;
-    }
-    setApiBaseUrl(normalized);
-    setApiUrl(getApiBaseUrl());
-    setError(null);
-  };
 
   const canContinue = () => {
     if (step === 1) return aadhaarDone;
@@ -520,22 +498,6 @@ export default function RegisterPage() {
           {step === 3 && (
             <div className="space-y-4">
               <h2 className="text-2xl font-black font-syne flex items-center gap-2"><Smartphone size={22} /> Mobile Verification</h2>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Backend API URL (for cross-device use)</label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={apiUrl}
-                    onChange={(e) => setApiUrl(e.target.value)}
-                    className="flex-1 border rounded-lg px-4 py-2"
-                    placeholder="http://192.168.1.10:8000/api"
-                  />
-                  <button onClick={saveApiUrl} type="button" className="px-4 py-2 border rounded-lg hover:bg-gray-50">
-                    Save
-                  </button>
-                </div>
-                <p className="text-xs text-gray-500">Use host laptop IP on your friend devices.</p>
-              </div>
               {!mobileDone ? (
                 <>
                   <div className="flex gap-2">

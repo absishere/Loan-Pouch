@@ -3,30 +3,11 @@
   if (envUrl) return envUrl;
 
   if (typeof window !== "undefined") {
-    const runtime = window.localStorage.getItem("lp_api_base_url");
-    if (runtime) return runtime;
-
     const host = window.location.hostname;
-    if (host && host !== "localhost" && host !== "127.0.0.1") {
-      return `http://${host}:8000/api`;
-    }
+    if (host) return `http://${host}:8000/api`;
   }
 
   return "http://127.0.0.1:8000/api";
-}
-
-export function getApiBaseUrl(): string {
-  return resolveBaseUrl();
-}
-
-export function setApiBaseUrl(url: string) {
-  if (typeof window === "undefined") return;
-  const normalized = url.trim().replace(/\/+$/, "");
-  if (!normalized) {
-    window.localStorage.removeItem("lp_api_base_url");
-    return;
-  }
-  window.localStorage.setItem("lp_api_base_url", normalized);
 }
 
 export const CONTRACTS = {
