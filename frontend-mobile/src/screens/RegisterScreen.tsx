@@ -26,11 +26,16 @@ export default function RegisterScreen() {
     if (step === 2) return panDone;
     if (step === 3) return mobileDone;
     if (step === 4) return faceDone;
-    if (step === 5) return formData.mpin.length === 6 && formData.tpin.length === 6;
+    if (step === 5) return formData.mpin.length === 6 && formData.tpin.length === 6 && formData.mpin !== formData.tpin;
     return false;
   };
 
   const handleNext = () => {
+    if (step === 5 && formData.mpin === formData.tpin && formData.mpin.length === 6) {
+      Alert.alert("Security Risk", "Your Login mPIN and Transaction tPIN must be different for maximum safety.");
+      return;
+    }
+
     if (!canContinue()) {
       let message = "Please complete the requirement to continue.";
       if (step === 1) message = "Please upload your Aadhaar Card.";

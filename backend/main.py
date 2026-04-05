@@ -1,4 +1,4 @@
-﻿from fastapi import FastAPI
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import logging
 
@@ -6,7 +6,7 @@ from app.core.config import get_settings
 from app.services.firebase_service import init_firebase
 
 # Import all routers
-from app.api import auth, kyc, loans, wallet
+from app.api import auth, kyc, loans, wallet, payments
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -52,14 +52,16 @@ async def startup_event():
 app.include_router(auth.router,   prefix="/api/v1")
 app.include_router(kyc.router,    prefix="/api/v1")
 app.include_router(loans.router,  prefix="/api/v1")
-app.include_router(wallet.router, prefix="/api/v1")
+app.include_router(wallet.router,   prefix="/api/v1")
+app.include_router(payments.router, prefix="/api/v1")
 
 # â”€â”€ Routers (/api â€” Web & Mobile clients) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # Both frontend clients build: BASE_URL(/api) + /loans/... â†’ /api/loans/...
 app.include_router(auth.router,   prefix="/api")
 app.include_router(kyc.router,    prefix="/api")
 app.include_router(loans.router,  prefix="/api")
-app.include_router(wallet.router, prefix="/api")
+app.include_router(wallet.router,   prefix="/api")
+app.include_router(payments.router, prefix="/api")
 
 
 @app.get("/", tags=["Health"])

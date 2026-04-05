@@ -69,6 +69,12 @@ export default function Home() {
                 Get Started
               </Link>
               <Link 
+                href="/login" 
+                className="px-8 lg:px-10 py-3 lg:py-4 border-2 border-gray-800 text-gray-800 rounded-full font-medium text-lg hover:scale-110 hover:bg-gray-800 hover:text-white transition-all"
+              >
+                Login
+              </Link>
+              <Link 
                 href="/recovery" 
                 className="px-8 lg:px-10 py-3 lg:py-4 border-2 border-gray-800 text-gray-800 rounded-full font-medium text-lg hover:scale-110 hover:bg-gray-800 hover:text-white transition-all"
               >

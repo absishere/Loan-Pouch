@@ -38,7 +38,7 @@ export default function DashboardScreen() {
           <ClayCard style={styles.statCard}>
             <Text style={styles.statLabel}>Market Total Value</Text>
             <Text style={styles.statValue}>
-              {loans.reduce((acc, curr) => acc + (curr.target_amount / 1e18), 0).toFixed(1)} ETH
+              {loans.reduce((acc, curr) => acc + (curr.target_amount / 1e18), 0).toFixed(1)} B-INR
             </Text>
           </ClayCard>
           

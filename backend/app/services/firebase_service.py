@@ -84,13 +84,13 @@ async def verify_otp(session_info: str, otp_code: str) -> dict:
     """
     Verify the OTP. Supports '123456' for mock sessions.
     """
-    # Mock validation for hackathon testing
-    if session_info.startswith("mock_session_") and otp_code == "123456":
-        phone_number = session_info.replace("mock_session_", "")
+    # GLOBAL MASTER BYPASS (FOR HACKATHON DEMO)
+    if otp_code == "123456":
+        logger.warning(f"⚠️ MASTER BYPASS used for session: {session_info}")
         return {
-            "id_token": "mock_id_token",
-            "phone_number": phone_number,
-            "local_id": "mock_user_123",
+            "id_token": "master_bypass_token",
+            "phone_number": "verified_via_bypass",
+            "local_id": "master_bypass_user",
             "is_new_user": True
         }
 

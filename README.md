@@ -1,122 +1,93 @@
-# 🧬 Loan Pouch
-**Empowering the Unbanked through Biometric Identity and Decentralized Trust.**
+﻿# Loan Pouch
+Decentralized micro-lending prototype with on-chain escrow, social trust approvals, and cross-device account recovery.
 
-> Built for **Nakshatra: A Tech Hackathon** | FinTech Track (Problem Statement 2)
+## What This Prototype Demonstrates
+- Borrowing and lending flow on Sepolia-backed contracts.
+- Guaranter approvals (2-of-3 style governance for approvals/recovery).
+- Login from different devices using backend account registry.
+- Lost wallet recovery workflow with persistent backend state.
+- One identity can have only one active wallet (phone + document commitment uniqueness).
+- Mock payment on-ramp with card/UPI rules.
 
----
+## Stack
+- Backend: FastAPI (`backend`)
+- Web: Next.js (`frontend-web`)
+- Mobile: Expo React Native (`frontend-mobile`)
+- Contracts: Hardhat + Solidity (`smart-contracts`)
 
-## 📖 Overview
+## Contract Addresses (Sepolia)
+- `B_INR`: `0x65E0a7226ECdCB7C47b5F998A98f1c55B42102AA`
+- `LoanPouchEscrow`: `0x2E28542574ec5F7b75c0264f590eE21C59F3cD57`
+- `IdentityRegistry`: `0x9E0be66DdF425fbfEfEFBa289809862f4f212704`
 
-Over a billion people globally lack access to formal banking and credit scores. **Loan Pouch** is a decentralized, gamified micro-lending platform that replaces traditional banking bureaucracy with Biometric Identity, Social Collateral, and Smart Contract Escrows.
+## Key Rules Implemented
+- `amount < 100000`: card and UPI both allowed in mock payment flow.
+- `amount >= 100000`: UPI blocked; valid card flow only.
+- Same phone + same document identity cannot create multiple wallets.
+- Recovery updates wallet mapping through guaranter approvals.
 
-Using **Gemini AI OCR**, client-side **Face Biometrics**, and **Algorithmic Guardian Weighting**, Loan Pouch allows individuals without traditional assets to secure loans safely, transparently, and without centralized control.
+## Project Structure
+- `backend/` FastAPI APIs, relayer logic, recovery/account registry, persistent demo state.
+- `frontend-web/` mentor demo UI for borrow/lend/guaranter/recovery/payment.
+- `frontend-mobile/` mobile client flows.
+- `smart-contracts/` Solidity contracts and deploy scripts.
 
----
+## Environment Variables
+Create root `.env` and set at minimum:
 
-## ✨ Advanced Features
-
-| Feature | Description |
-|---|---|
-| 🔐 **ZK-SNARK Identity** | High-value loans (>₹10,00,000) require ZK-proof of verification via IPFS KYC metadata |
-| 🤳 **Biometric e-KYC** | Integrated **Gemini 2.5 Flash** for OCR and **Face-API.js** for live biometric matching |
-| 💬 **OTP Authentication** | Firebase-powered phone verification with a robust **Mock Fallback** for hackathon testing |
-| 🤝 **Social Collateral** | Guardian approvals are weighted by on-chain Trust Score (≥50 = 2× vote) |
-| 🏗️ **Milestone Release** | Large loans are released in 4 × 25% tranches, preventing capital risk |
-| 🔑 **Identity Recovery** | 2-of-3 Guardian-approved wallet migration with bricking of the compromised wallet |
-| 🛡️ **Panic Mode / SMS Lock** | Text "LOCK WALLET" to our webhook to freeze account instantly via smart contract |
-| 🎮 **Trust Score** | On-chain Trust Score updated on every repayment/default (+1 / -1) |
-
----
-
-## 📂 Mono-Repo Structure
-
-```
-Loan-Pouch/
-├── backend/                 # FastAPI Python Server & EVM Indexer
-│   └── app/
-│       ├── api/             # REST routes (loans, kyc, auth)
-│       ├── services/        # web3, kyc, firebase_service
-│       └── models/          # Pydantic schemas
-├── smart-contracts/         # Hardhat + Solidity
-│   ├── contracts/
-│   │   ├── LoanPouchEscrow.sol   # Ultimate Advanced Escrow
-│   │   └── B_INR.sol             # B-INR stablecoin token
-├── frontend-web/            # Next.js 14 Dashboard + Gemini/Face-API Integration
-└── frontend-mobile/         # Expo React Native App
-```
-
----
-
-## ⚙️ Prerequisites
-
-Ensure the following are installed before proceeding:
-
-| Tool | Version | Install |
-|---|---|---|
-| Node.js | ≥ 18 | https://nodejs.org |
-| Python | ≥ 3.10 | https://python.org |
-| Git | Any | https://git-scm.com |
-
----
-
-## 🚀 Quick Start
-
-### 1. Clone the Repository
-
-```bash
-git clone https://github.com/absishere/Loan-Pouch.git
-cd Loan-Pouch
+```env
+SEPOLIA_RPC_URL=...
+PRIVATE_KEY=...
+BACKEND_WALLET_PRIVATE_KEY=...
+BINR_CONTRACT_ADDRESS=0x65E0a7226ECdCB7C47b5F998A98f1c55B42102AA
+ESCROW_CONTRACT_ADDRESS=0x2E28542574ec5F7b75c0264f590eE21C59F3cD57
+IDENTITY_REGISTRY_CONTRACT_ADDRESS=0x9E0be66DdF425fbfEfEFBa289809862f4f212704
+FIREBASE_WEB_API_KEY=...
+NEXT_PUBLIC_GEMINI_API_KEY=...
+PAYMENT_MODE=mock
+NEXT_PUBLIC_API_URL=http://127.0.0.1:8000/api
+EXPO_PUBLIC_API_URL=http://<your-lan-ip>:8000/api
 ```
 
-### 2. Configure Environment Variables
-
-Create a `.env` file in the root:
-
-```bash
-# Root .env
-BINR_CONTRACT_ADDRESS=0x6e215881860d93a63Bf3CEb3EB2031F8c925c22e
-ESCROW_CONTRACT_ADDRESS=0x5F20ffB3BC50b37A4c7ed930a7D8e690d9f00a35
-FIREBASE_WEB_API_KEY=<YOUR_FIREBASE_KEY>
-NEXT_PUBLIC_GEMINI_API_KEY=<YOUR_GEMINI_KEY>
-```
-
-### 3. Launch Services
-
-**Backend (Terminal 1):**
-```bash
+## Run Locally
+### 1. Backend
+```powershell
 cd backend
-python -m uvicorn main:app --reload
+.\venv\Scripts\activate
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-**Web App (Terminal 2):**
-```bash
+### 2. Web
+```powershell
 cd frontend-web
 npm install
 npm run dev
 ```
 
-✅ Web Dashboard: **http://localhost:3000** (or 3001)
+### 3. Mobile
+```powershell
+cd frontend-mobile
+npm install
+npm start
+```
 
----
+## Multi-Laptop Demo Setup
+- Keep backend running on one host machine.
+- On other laptops, point `NEXT_PUBLIC_API_URL` to host LAN IP.
+- This shares live requests, statuses, guaranter queues, and recovery state.
 
-## 🏗️ Smart Contract Architecture
+## Recovery Flow
+1. User opens `/recovery`, enters phone + mPIN + lost/new wallet + 3 guaranters.
+2. Backend stores persistent recovery request.
+3. Guaranters approve from `/guaranter` console.
+4. At 2 approvals, wallet mapping is migrated.
+5. User can log in from any device with same phone + mPIN and receive the new wallet.
 
-The `LoanPouchEscrow` contract manages the entire loan lifecycle:
-- **State Machine:** `Gathering → Pending → Disbursed → Repaid / Defaulted`
-- **Milestone Threshold:** ≥ 1,000,000 B-INR triggers tranche-based release.
-- **Guardian Weighting:** Users with Trust Score ≥ 50 have doubled voting power for co-signing.
+## Security/Privacy in Prototype
+- Raw document details are not persisted in browser session storage.
+- Backend stores hashed identity values for uniqueness checks.
+- Identity commitments are anchored on-chain via `IdentityRegistry`.
 
----
-
-## 👥 Team
-
-- **Abbas**: Architecture, Smart Contracts, Backend
-- **Anchita**: Web Dashboard & UI/UX
-- **Atharv**: Contract State Machine
-- **Rushikesh**: Biometric Integration
-
----
-
-## 📄 License
-
-MIT License — Built for Nakshatra Hackathon
+## Notes
+- Required ABI artifacts are intentionally kept for backend web3 reads.
+- Runtime state files are ignored via `.gitignore`.

@@ -8,6 +8,7 @@ const { SEPOLIA_RPC_URL, PRIVATE_KEY, ETHERSCAN_API_KEY } = process.env;
 /** @type import('hardhat/config').HardhatUserConfig */
 export default {
   solidity: {
+    preferWasm: true,
     version: "0.8.24",
     settings: {
       viaIR: true,

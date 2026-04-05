@@ -1,27 +1,19 @@
-"use client";
+﻿"use client";
 
-import { getTrustScoreTier, getInitials } from "@/lib/utils";
-import { Shield, Copy, Check, Smartphone, Calendar, User, Wallet } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { Calendar, Copy, Wallet, Check, Shield, Smartphone } from "lucide-react";
+
+import { getCurrentUser } from "@/lib/session";
+import { getInitials, getTrustScoreTier } from "@/lib/utils";
 
 export default function ProfilePage() {
   const [copied, setCopied] = useState(false);
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
-    const stored = localStorage.getItem("lp_user_profile");
-    if (stored) {
-      setUser(JSON.parse(stored));
-    } else {
-      // Fallback
-      setUser({
-        name: "Member",
-        trustScore: 400,
-        walletAddress: "Connect Wallet",
-        phone: "Not Verified",
-        joined: new Date().toISOString(),
-        aadhaar: "XXXX-XXXX-XXXX",
-      });
+    const current = getCurrentUser();
+    if (current) {
+      setUser(current);
     }
   }, []);
 
@@ -30,24 +22,21 @@ export default function ProfilePage() {
   const { tier, color } = getTrustScoreTier(user.trustScore);
 
   const copyToClipboard = () => {
-    navigator.clipboard.writeText(user.walletAddress);
+    navigator.clipboard.writeText(user.walletAddress || "");
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setTimeout(() => setCopied(false), 1500);
   };
 
   return (
     <div className="min-h-screen bg-[#f8f9fa]">
       <div className="border-b border-gray-200 bg-white px-8 py-6">
         <h1 className="text-3xl font-black font-syne tracking-tight">Your Identity</h1>
-        <p className="text-gray-600 font-medium">Verified Biometric Profile on Loan Pouch</p>
+        <p className="text-gray-600 font-medium">Documents are not stored locally. Identity commitments are anchored on-chain.</p>
       </div>
 
       <div className="p-8 max-w-4xl mx-auto space-y-8">
-        {/* Profile Card */}
         <div className="bg-white border-2 border-black rounded-3xl p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col md:flex-row items-center gap-8">
-          <div className="w-32 h-32 bg-black text-white rounded-full flex items-center justify-center text-5xl font-black shadow-lg">
-            {getInitials(user.name)}
-          </div>
+          <div className="w-32 h-32 bg-black text-white rounded-full flex items-center justify-center text-5xl font-black shadow-lg">{getInitials(user.name)}</div>
           <div className="flex-1 text-center md:text-left">
             <h2 className="text-4xl font-black font-syne mb-2 tracking-tight">{user.name}</h2>
             <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl border-2 border-current font-bold ${color}`}>
@@ -70,7 +59,6 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Verification Details */}
         <div className="grid md:grid-cols-2 gap-8">
           <div className="bg-white border-2 border-black rounded-3xl p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,0.05)]">
             <div className="flex items-center gap-3 mb-6">
@@ -83,12 +71,8 @@ export default function ProfilePage() {
                 <span className="px-3 py-1 bg-emerald-500 text-white text-xs font-black rounded-lg uppercase">Linked</span>
               </div>
               <div className="flex justify-between items-center p-4 bg-emerald-50 border border-emerald-100 rounded-2xl">
-                <span className="font-bold text-emerald-800">Aadhaar (OCR Verified)</span>
-                <span className="font-mono text-sm font-bold">{user.aadhaar}</span>
-              </div>
-              <div className="flex justify-between items-center p-4 bg-emerald-50 border border-emerald-100 rounded-2xl">
-                <span className="font-bold text-emerald-800">PAN Card</span>
-                <span className="font-mono text-sm font-bold">{user.pan || "XXXXX0000X"}</span>
+                <span className="font-bold text-emerald-800">Document Commitment</span>
+                <span className="font-mono text-xs font-bold">On-chain only</span>
               </div>
             </div>
           </div>
@@ -101,15 +85,11 @@ export default function ProfilePage() {
             <div className="space-y-4">
               <div className="p-4 bg-gray-50 border border-gray-200 rounded-2xl">
                 <p className="text-xs font-bold text-gray-500 uppercase mb-1">Authenticated Phone</p>
-                <p className="font-bold">{user.phone}</p>
+                <p className="font-bold">••••••{user.phoneLast4}</p>
               </div>
               <div className="p-4 bg-gray-50 border border-gray-200 rounded-2xl">
                 <p className="text-xs font-bold text-gray-500 uppercase mb-1">mPIN Security</p>
-                <p className="font-bold text-emerald-600">Enabled ••••••</p>
-              </div>
-              <div className="p-4 bg-gray-50 border border-gray-200 rounded-2xl">
-                <p className="text-xs font-bold text-gray-500 uppercase mb-1">Transaction tPIN</p>
-                <p className="font-bold text-emerald-600">Enabled ••••••</p>
+                <p className="font-bold text-emerald-600">Enabled</p>
               </div>
             </div>
           </div>
@@ -118,3 +98,4 @@ export default function ProfilePage() {
     </div>
   );
 }
+

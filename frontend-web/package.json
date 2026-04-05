@@ -3,15 +3,16 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "dotenv -e ../.env -- next dev",
-    "build": "dotenv -e ../.env -- next build",
-    "start": "dotenv -e ../.env -- next start",
+    "dev": "npx dotenv-cli -e ../.env -- next dev",
+    "build": "npx dotenv-cli -e ../.env -- next build",
+    "start": "npx dotenv-cli -e ../.env -- next start",
     "lint": "next lint"
   },
   "dependencies": {
     "@google/generative-ai": "^0.11.5",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
+    "encoding": "^0.1.13",
     "ethers": "^6.16.0",
     "face-api.js": "^0.22.2",
     "framer-motion": "^11.2.10",

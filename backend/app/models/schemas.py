@@ -71,6 +71,20 @@ class LoanResponse(BaseModel):
     risk_probability: Optional[float]
 
 
+class RiskScoreRequest(BaseModel):
+    """
+    Backward/forward compatible payload for risk scoring.
+    Supports both web/mobile client field shapes.
+    """
+    borrower_wallet: Optional[str] = None
+    trust_score: Optional[int] = None
+    amount_binr: Optional[float] = None
+    loan_amount: Optional[float] = None
+    duration_days: int = Field(default=30, gt=0, le=365)
+    guardian_count: Optional[int] = None
+    guardian_wallets: Optional[List[str]] = None
+
+
 # ── Wallet / User models ──────────────────────────────────────────────────────
 
 class WalletLockRequest(BaseModel):

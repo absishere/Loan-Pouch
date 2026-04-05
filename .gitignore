@@ -7,6 +7,7 @@ __pycache__/
 venv/
 env/
 .env
+.env.*
 *.egg-info/
 dist/
 build/
@@ -17,11 +18,27 @@ firebase-service-account.json
 # Node / Hardhat
 node_modules/
 smart-contracts/node_modules/
+.next/
+frontend-web/.next/
+frontend-mobile/.expo/
+frontend-mobile/.expo-shared/
 
 # Hardhat artifacts (large, compiled from source)
 # We keep artifacts/ tracked because the FastAPI backend config reads ABIs directly from here.
 # smart-contracts/artifacts/
 smart-contracts/cache/
+smart-contracts/artifacts/build-info/
+smart-contracts/compile_err.txt
+smart-contracts/deploy.log
+smart-contracts/deploy_output.txt
+
+# Runtime state / temp exports
+backend/data/
+*.csv
+*.log
+*.tmp
+*.bak
+*Backup*.tsx
 
 # OS
 .DS_Store

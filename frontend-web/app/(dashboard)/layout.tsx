@@ -3,17 +3,17 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import { isAuthenticated } from "@/lib/session";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
-    // Route protection — hackathon-grade guard using localStorage
-    const isRegistered = localStorage.getItem("lp_wallet_registered");
-    if (!isRegistered) {
-      router.replace("/"); // kick to landing if not registered
+    if (!isAuthenticated()) {
+      router.replace("/");
     }
   }, [router]);
 
   return <DashboardLayout>{children}</DashboardLayout>;
 }
+

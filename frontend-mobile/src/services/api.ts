@@ -1,4 +1,6 @@
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL || "http://192.168.9.126:8000/api";
+const BASE_URL =
+  process.env.EXPO_PUBLIC_API_URL ||
+  "http://10.0.2.2:8000/api";
 
 export const CONTRACTS = {
   escrow: process.env.EXPO_PUBLIC_ESCROW_ADDRESS || "",
@@ -58,6 +60,8 @@ export interface LoanResponse {
   risk_label?: string;
   risk_probability?: number;
 }
+
+export type LoanData = LoanResponse;
 
 export const LOAN_STATE_LABELS: Record<number, string> = {
   0: "Gathering",

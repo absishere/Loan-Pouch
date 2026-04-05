@@ -115,9 +115,14 @@ export default function LendScreen() {
              <Text style={{ textAlign: 'center', color: '#6b7280', marginTop: 20 }}>No active loan requests on the contract.</Text>
           ) : (
             loans.map((request, idx) => {
-              const amountINR = request.amount / 1e18;
-              const interestNum = request.interest_amount / 1e18;
-              const addr = request.borrower_address;
+              const amountINR = request.target_amount / 1e18;
+              const interestNum = request.target_interest / 1e18;
+              const addr = request.borrower;
+              const fundingSecsLeft = Math.max(
+                0,
+                request.funding_deadline - Math.floor(Date.now() / 1000)
+              );
+              const daysLeft = Math.ceil(fundingSecsLeft / (24 * 60 * 60));
 
               return (
                 <ClayCard key={idx} style={styles.requestCard}>
@@ -129,7 +134,7 @@ export default function LendScreen() {
                       </View>
                       <View>
                         <Text style={styles.borrowerName}>{addr.substring(0, 8)}...</Text>
-                        <Text style={styles.purpose}>{request.state}</Text>
+                        <Text style={styles.purpose}>State {request.state}</Text>
                       </View>
                     </View>
                   </View>
@@ -137,7 +142,7 @@ export default function LendScreen() {
                   {/* Amount Section */}
                   <View style={styles.amountSection}>
                     <Text style={styles.requestAmount}>₹{amountINR.toLocaleString('en-IN')}</Text>
-                    <Text style={styles.duration}>{request.funding_deadline_days} days</Text>
+                    <Text style={styles.duration}>{daysLeft} days left</Text>
                   </View>
 
                   {/* Details */}
@@ -148,7 +153,7 @@ export default function LendScreen() {
                     </View>
                     <View style={styles.detailRow}>
                       <Text style={styles.detailLabel}>Time Remaining</Text>
-                      <Text style={styles.timeLeft}>{request.funding_deadline_days}d left</Text>
+                      <Text style={styles.timeLeft}>{daysLeft}d left</Text>
                     </View>
                   </View>
 
@@ -158,7 +163,7 @@ export default function LendScreen() {
                       title="💳 Fund Now"
                       variant="primary"
                       style={styles.actionButton}
-                      onPress={() => handleFund(String(idx))}
+                      onPress={() => handleFund(String(request.id))}
                     />
                   </View>
                 </ClayCard>

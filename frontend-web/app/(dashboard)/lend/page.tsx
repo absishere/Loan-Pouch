@@ -1,13 +1,16 @@
-"use client";
+﻿"use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { formatCurrency, getInitials, getStatusColor } from "@/lib/utils";
+import { useCallback, useEffect, useState } from "react";
+import { ethers } from "ethers";
+import { RefreshCw, Search } from "lucide-react";
+
 import { api, LoanResponse } from "@/lib/api";
-import { Search, RefreshCw } from "lucide-react";
+import { formatCurrency, getStatusColor } from "@/lib/utils";
+import { getCurrentUser } from "@/lib/session";
 
 const LOAN_STATE_LABELS: Record<number, string> = {
   0: "Gathering",
-  1: "Pending",
+  1: "Pending Guaranters",
   2: "Disbursed",
   3: "Repaid",
   4: "Cancelled",
@@ -28,27 +31,35 @@ export default function LendPage() {
     try {
       const data = await api.listLoans(0, 50);
       setLoans(data);
-    } catch (e) {
+    } catch {
       setError("Could not reach backend. Is FastAPI running on :8000?");
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => { loadLoans(); }, [loadLoans]);
+  useEffect(() => {
+    loadLoans();
+  }, [loadLoans]);
 
   const handleFund = async (loan: LoanResponse) => {
-    const lender = prompt("Enter your wallet address:");
+    const current = getCurrentUser();
+    const lender = current?.walletAddress || prompt("Enter your wallet address:");
     if (!lender) return;
-    const amount = prompt(`Enter BINR amount (max ${((loan.target_amount - loan.gathered_amount) / 1e18).toFixed(2)}):`);
+
+    const remaining = Math.max(0, loan.target_amount - loan.gathered_amount);
+    const maxAmount = Number(ethers.formatUnits(BigInt(remaining), 18));
+    const amount = prompt(`Enter LP-INR amount to lend (max ${maxAmount.toFixed(2)}):`);
     if (!amount) return;
+
     try {
       setFundingId(loan.id);
-      const res = await api.fundLoan(loan.id, Math.floor(Number(amount) * 1e18), lender);
-      alert("Funded! TX: " + res.tx_hash);
-      loadLoans();
-    } catch {
-      alert("Funding failed.");
+      const amountWei = ethers.parseUnits(amount, 18).toString();
+      const res = await api.fundLoan(loan.id, amountWei, lender);
+      alert(`Funded successfully. TX: ${res.tx_hash}`);
+      await loadLoans();
+    } catch (e: any) {
+      alert(e?.message || "Funding failed.");
     } finally {
       setFundingId(null);
     }
@@ -74,7 +85,7 @@ export default function LendPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold font-syne">Browse Loan Requests</h1>
-            <p className="text-sm text-gray-600">Live on-chain · LoanPouchEscrow · Sepolia</p>
+            <p className="text-sm text-gray-600">Live on-chain • LoanPouchEscrow • Sepolia</p>
           </div>
           <button onClick={loadLoans} className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors">
             <RefreshCw size={16} />
@@ -97,9 +108,15 @@ export default function LendPage() {
           </div>
           <div className="flex gap-2">
             {["all", "gathering", "disbursed", "repaid"].map((s) => (
-              <button key={s} onClick={() => setFilter(s)}
-                className={`px-4 py-2 rounded-lg border font-medium transition-colors capitalize ${filter === s ? "border-black bg-black text-white" : "border-gray-300 hover:border-gray-400"}`}
-              >{s}</button>
+              <button
+                key={s}
+                onClick={() => setFilter(s)}
+                className={`px-4 py-2 rounded-lg border font-medium transition-colors capitalize ${
+                  filter === s ? "border-black bg-black text-white" : "border-gray-300 hover:border-gray-400"
+                }`}
+              >
+                {s}
+              </button>
             ))}
           </div>
         </div>
@@ -113,7 +130,7 @@ export default function LendPage() {
         ) : (
           <div className="grid grid-cols-2 gap-6">
             {filteredLoans.map((loan) => {
-              const fundingPct = Math.min(100, (loan.gathered_amount / loan.target_amount) * 100);
+              const fundingPct = loan.target_amount > 0 ? Math.min(100, (loan.gathered_amount / loan.target_amount) * 100) : 0;
               const stateLabel = LOAN_STATE_LABELS[loan.state] ?? "Unknown";
               return (
                 <div key={loan.id} className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-shadow">
@@ -123,11 +140,8 @@ export default function LendPage() {
                         {loan.borrower.slice(2, 4).toUpperCase()}
                       </div>
                       <div>
-                        <h3 className="font-bold font-mono text-sm">{loan.borrower.slice(0, 14)}…</h3>
-                        <p className="text-xs text-gray-500">
-                          {loan.is_milestone && <span className="text-purple-600 font-semibold">🏁 Milestone · </span>}
-                          Tranche {loan.claimed_tranches}/4
-                        </p>
+                        <h3 className="font-bold font-mono text-sm">{loan.borrower.slice(0, 14)}...</h3>
+                        <p className="text-xs text-gray-500">Tranche {loan.claimed_tranches}/4</p>
                       </div>
                     </div>
                     <span className={`px-3 py-1 rounded-lg text-xs font-medium border ${getStatusColor(stateLabel)}`}>{stateLabel}</span>
@@ -136,17 +150,21 @@ export default function LendPage() {
                   <div className="grid grid-cols-2 gap-4 mb-4">
                     <div>
                       <p className="text-sm text-gray-600 mb-1">Target</p>
-                      <p className="text-xl font-bold font-syne">{formatCurrency(loan.target_amount / 1e18)}</p>
+                      <p className="text-xl font-bold font-syne">{formatCurrency(Number(ethers.formatUnits(BigInt(loan.target_amount), 18)))}</p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-600 mb-1">AI Risk</p>
-                      {loan.risk_label
-                        ? <span className={`inline-block px-2 py-1 rounded text-xs font-medium border ${riskColor(loan.risk_label)}`}>{loan.risk_label} ({((loan.risk_probability ?? 0) * 100).toFixed(0)}%)</span>
-                        : <span className="text-gray-400 text-sm">—</span>}
+                      {loan.risk_label ? (
+                        <span className={`inline-block px-2 py-1 rounded text-xs font-medium border ${riskColor(loan.risk_label)}`}>
+                          {loan.risk_label} ({((loan.risk_probability ?? 0) * 100).toFixed(0)}%)
+                        </span>
+                      ) : (
+                        <span className="text-gray-400 text-sm">-</span>
+                      )}
                     </div>
                     <div>
                       <p className="text-sm text-gray-600 mb-1">Interest</p>
-                      <p className="font-medium">{formatCurrency(loan.target_interest / 1e18)}</p>
+                      <p className="font-medium">{formatCurrency(Number(ethers.formatUnits(BigInt(loan.target_interest), 18)))}</p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-600 mb-1">Approvals</p>
@@ -167,9 +185,15 @@ export default function LendPage() {
                   <button
                     disabled={loan.state !== 0 || fundingId === loan.id}
                     onClick={() => handleFund(loan)}
-                    className={`w-full py-3 rounded-xl font-medium transition-colors ${loan.state !== 0 ? "bg-gray-100 text-gray-400 cursor-not-allowed" : fundingId === loan.id ? "bg-gray-400 text-white" : "bg-black text-white hover:bg-gray-800"}`}
+                    className={`w-full py-3 rounded-xl font-medium transition-colors ${
+                      loan.state !== 0
+                        ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                        : fundingId === loan.id
+                        ? "bg-gray-400 text-white"
+                        : "bg-black text-white hover:bg-gray-800"
+                    }`}
                   >
-                    {fundingId === loan.id ? "Processing…" : loan.state === 0 ? "Fund This Loan" : stateLabel}
+                    {fundingId === loan.id ? "Processing..." : loan.state === 0 ? "Fund This Loan" : stateLabel}
                   </button>
                 </div>
               );
@@ -187,3 +211,4 @@ export default function LendPage() {
     </div>
   );
 }
+

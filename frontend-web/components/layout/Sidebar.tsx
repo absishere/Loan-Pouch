@@ -1,16 +1,18 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, TrendingUp, TrendingDown, BarChart3, History, User, LogOut, X, ShieldCheck } from "lucide-react";
 import { useState, useEffect } from "react";
 import { getInitials } from "@/lib/utils";
+import { getCurrentUser, logout } from "@/lib/session";
+import { useRouter } from "next/navigation";
 
 const navItems = [
   { icon: Home, label: "Dashboard", href: "/dashboard" },
   { icon: TrendingUp, label: "Borrow", href: "/borrow" },
   { icon: TrendingDown, label: "Lend", href: "/lend" },
-  { icon: ShieldCheck, label: "Guardian", href: "/guardian" },
+  { icon: ShieldCheck, label: "Guaranter", href: "/guaranter" },
   { icon: BarChart3, label: "Analytics", href: "/analytics" },
   { icon: History, label: "History", href: "/history" },
   { icon: User, label: "Profile", href: "/profile" },
@@ -23,13 +25,12 @@ interface SidebarProps {
 
 export default function Sidebar({ isOpen = true, onClose }: SidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const [user, setUser] = useState<{name: string} | null>(null);
 
   useEffect(() => {
-    const stored = localStorage.getItem("lp_user_profile");
-    if (stored) {
-      setUser(JSON.parse(stored));
-    }
+    const current = getCurrentUser();
+    if (current) setUser(current);
   }, []);
 
   return (
@@ -99,7 +100,13 @@ export default function Sidebar({ isOpen = true, onClose }: SidebarProps) {
               <p className="text-xs text-gray-400 font-bold">Verified Account</p>
             </div>
           </Link>
-          <button className="w-full flex items-center gap-3 px-5 py-3 mt-4 text-sm font-bold text-gray-400 hover:text-white hover:bg-red-500/20 hover:text-red-400 rounded-xl transition-all">
+          <button
+            onClick={() => {
+              logout();
+              router.replace("/login");
+            }}
+            className="w-full flex items-center gap-3 px-5 py-3 mt-4 text-sm font-bold text-gray-400 hover:text-white hover:bg-red-500/20 hover:text-red-400 rounded-xl transition-all"
+          >
             <LogOut size={18} />
             <span>Logout</span>
           </button>
@@ -108,3 +115,4 @@ export default function Sidebar({ isOpen = true, onClose }: SidebarProps) {
     </>
   );
 }
+

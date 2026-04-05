@@ -1,38 +1,50 @@
-import os
-from pydantic_settings import BaseSettings
+﻿import os
 from functools import lru_cache
+
+from pydantic import field_validator
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    # ── App ───────────────────────────────────────────────────────────────────
     APP_NAME: str = "Loan Pouch API"
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = True
 
-    # ── Firebase ──────────────────────────────────────────────────────────────
-    # Path to the service account JSON downloaded from Firebase Console.
-    FIREBASE_SERVICE_ACCOUNT_PATH: str = "firebase-service-account.json"
-    FIREBASE_WEB_API_KEY: str = ""            # from Firebase Project Settings → General
+    @field_validator("DEBUG", mode="before")
+    @classmethod
+    def parse_debug(cls, value):
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, str):
+            normalized = value.strip().lower()
+            if normalized in {"1", "true", "yes", "y", "on", "debug"}:
+                return True
+            if normalized in {"0", "false", "no", "n", "off", "release", "prod", "production"}:
+                return False
+        return True
 
-    # ── Pinata (IPFS) ─────────────────────────────────────────────────────────
+    FIREBASE_SERVICE_ACCOUNT_PATH: str = "firebase-service-account.json"
+    FIREBASE_WEB_API_KEY: str = ""
+
+    RAZORPAY_KEY_ID: str = ""
+    RAZORPAY_KEY_SECRET: str = ""
+    PAYMENT_MODE: str = "mock"
+
     PINATA_API_KEY: str = ""
     PINATA_API_SECRET: str = ""
     PINATA_BASE_URL: str = "https://api.pinata.cloud"
 
-    # ── Blockchain ────────────────────────────────────────────────────────────
-    # Local Hardhat: http://127.0.0.1:8545  |  Sepolia: from .env
     WEB3_RPC_URL: str = "http://127.0.0.1:8545"
-    BACKEND_WALLET_PRIVATE_KEY: str = ""  # Deployer/Admin key for backend-signed txns
+    BACKEND_WALLET_PRIVATE_KEY: str = ""
 
-    # Contract addresses – filled in after your blockchain team deploys
-    BINR_CONTRACT_ADDRESS: str = "0xF10Ce26e1ebc46c3248eFd4f7e129399dC6b780d"
-    ESCROW_CONTRACT_ADDRESS: str = "0x1F85067f88b4597c5eE16Ec7fe9fD7C48910d978"
+    BINR_CONTRACT_ADDRESS: str = "0x65E0a7226ECdCB7C47b5F998A98f1c55B42102AA"
+    ESCROW_CONTRACT_ADDRESS: str = "0x2E28542574ec5F7b75c0264f590eE21C59F3cD57"
+    IDENTITY_REGISTRY_CONTRACT_ADDRESS: str = ""
 
-    # ABI files (auto-resolved from smart-contracts/artifacts)
     BINR_ABI_PATH: str = "../smart-contracts/artifacts/contracts/B_INR.sol/B_INR.json"
     ESCROW_ABI_PATH: str = "../smart-contracts/artifacts/contracts/LoanPouchEscrow.sol/LoanPouchEscrow.json"
+    IDENTITY_REGISTRY_ABI_PATH: str = "../smart-contracts/artifacts/contracts/IdentityRegistry.sol/IdentityRegistry.json"
 
-    # ── Security ──────────────────────────────────────────────────────────────
     JWT_SECRET_KEY: str = "changeme-use-a-secure-random-string-in-production"
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
@@ -46,3 +58,4 @@ class Settings(BaseSettings):
 @lru_cache()
 def get_settings() -> Settings:
     return Settings()
+
